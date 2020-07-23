@@ -15,7 +15,7 @@ This directive *is not an environment variable*.
 It has to be either 'production' or 'development'.`
         );
     }
-    if (env !== 'production' && env !== 'development') {
+    if (env.buildfor !== 'production' && env.buildfor !== 'development') {
         throw new Error(
             `You need to specify whether to build Flatmate 
 for production or for development via the 'buildfor'
