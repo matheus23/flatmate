@@ -1422,6 +1422,18 @@ elliptic@^6.0.0, elliptic@^6.5.2:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.0"
 
+elm-hot-webpack-loader@^1.1.7:
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/elm-hot-webpack-loader/-/elm-hot-webpack-loader-1.1.7.tgz#8dd254586c015887f356a132d3dc929f6d95a5a6"
+  integrity sha512-FcRN8UlTl52EigvGjTaG9rnfdUJYh88eWRrruUmZLNVb/71maM92l3HNDAcyztOj4pEYGhoo9DEHEquZm6B08A==
+  dependencies:
+    elm-hot "^1.1.5"
+
+elm-hot@^1.1.5:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/elm-hot/-/elm-hot-1.1.5.tgz#bba309b592d39b5c3195c3c6f608f36b96c23b89"
+  integrity sha512-HSMlAr6INTV82wkpPNG0zsHoJXo/04GwG7bnhFX8s4zyIbbzuJAovsdo27FAT6/NKx5IVTXGI+IFcK9Z7oN1Tw==
+
 elm-webpack-loader@^6.0.1:
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/elm-webpack-loader/-/elm-webpack-loader-6.0.1.tgz#45db22979385f114cd56530700cef5b7f33cc9cb"

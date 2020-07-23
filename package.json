@@ -7,11 +7,12 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "webpack --config scripts/webpack.config.js",
-    "dev": "webpack-dev-server --config scripts/webpack.config.js"
+    "build": "webpack --env.buildfor=production --config scripts/webpack.config.js --progress",
+    "dev": "webpack-dev-server --env.buildfor=development --mode development --config scripts/webpack.config.js --hot"
   },
   "devDependencies": {
     "autoprefixer": "^9.8.5",
+    "elm-hot-webpack-loader": "^1.1.7",
     "elm-webpack-loader": "^6.0.1",
     "html-webpack-plugin": "^4.3.0",
     "postcss-loader": "^3.0.0",
