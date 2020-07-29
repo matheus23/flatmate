@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Html exposing (div, h1, text)
+import TW.Breakpoints exposing (..)
 
 
 main =
