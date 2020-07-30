@@ -19,7 +19,12 @@ module.exports = env => {
         },
         devtool: isDev ? 'inline-source-maps' : undefined,
         devServer: isDev
-            ? { contentBase: './dist' }
+            ? {
+                contentBase: './dist',
+                headers: {
+                    "Access-Control-Allow-Origin": "*",
+                }
+            }
             : undefined,
 
         module: {

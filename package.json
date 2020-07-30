@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "build": "yarn gen:TW && webpack --env.buildfor=production --config scripts/webpack.config.js --progress",
-    "dev": "yarn gen:TW && webpack-dev-server --env.buildfor=development --mode development --config scripts/webpack.config.js --hot",
+    "dev": "webpack-dev-server --env.buildfor=development --mode development --config scripts/webpack.config.js --hot",
     "gen:TW": "postcss -o /dev/null ./css/tailwind.css --config scripts/tailwind/postcss.config.js"
   },
   "devDependencies": {
@@ -16,11 +16,14 @@
     "elm-hot-webpack-loader": "^1.1.7",
     "elm-webpack-loader": "^6.0.1",
     "html-webpack-plugin": "^4.3.0",
-    "ipfs": "^0.48.1",
+    "ipfs": "0.46.0",
+    "ipfs-http-client": "^45.0.0",
     "orbit-db": "^0.24.2",
+    "orbit-db-keystore": "0.3.4",
     "postcss-cli": "^7.1.1",
     "postcss-elm-css-tailwind": "^0.4.1",
     "postcss-loader": "^3.0.0",
+    "secp256k1": "3.8.0",
     "style-loader": "^1.2.1",
     "tailwindcss": "^1.5.2",
     "terser-webpack-plugin": "^3.0.8",
