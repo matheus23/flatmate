@@ -1,8 +1,12 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, text, div, h1, img)
-import Html.Attributes exposing (src)
+import Html
+import Html.Styled exposing (Html, div, h1, img, text)
+import Html.Styled.Attributes exposing (css, src)
+import Tailwind.Breakpoints exposing (..)
+import Tailwind.Utilities exposing (..)
+
 
 
 ---- MODEL ----
@@ -34,12 +38,18 @@ update msg model =
 ---- VIEW ----
 
 
-view : Model -> Html Msg
+view : Model -> Html.Html Msg
 view model =
-    div []
-        [ img [ src "/logo.svg" ] []
-        , h1 [] [ text "Your Elm App is working!" ]
-        ]
+    Html.Styled.toUnstyled <|
+        div
+            [ css
+                [ bg_purple_500
+                , atBreakpoint [ ( sm, bg_red_800 ), ( lg, bg_green_200 ) ]
+                ]
+            ]
+            [ img [ src "/logo.svg" ] []
+            , h1 [] [ text "Your Elm App is working!" ]
+            ]
 
 
 

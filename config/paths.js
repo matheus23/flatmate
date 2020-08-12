@@ -1,30 +1,30 @@
-'use strict';
+"use strict";
 
-const path = require('path');
-const fs = require('fs');
-const url = require('url');
-const cosmiconfig = require('cosmiconfig');
+const path = require("path");
+const fs = require("fs");
+const url = require("url");
+const cosmiconfig = require("cosmiconfig");
 
 // Make sure any symlinks in the project folder are resolved:
 // https://github.com/facebookincubator/create-react-app/issues/637
 const appDirectory = fs.realpathSync(process.cwd());
-const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
+const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 
 // We look for configration in files supported by cosmiconfig by default:
 // https://github.com/davidtheclark/cosmiconfig
-const explorer = cosmiconfig('elmapp');
+const explorer = cosmiconfig("elmapp");
 const result = explorer.searchSync(appDirectory);
 const config = result ? result.config : loadElmJson();
-const id = x => x;
+const id = (x) => x;
 const configureWebpack =
-  typeof config.configureWebpack === 'function' ? config.configureWebpack : id;
+  typeof config.configureWebpack === "function" ? config.configureWebpack : id;
 
 // WARNING:
 // We support config in elm.json only for legacy reasons.
 // elm-package removes the settings, so this will be removed in the future.
 function loadElmJson() {
   try {
-    const elmJson = require(resolveApp('elm.json'));
+    const elmJson = require(resolveApp("elm.json"));
     if (elmJson.homepage || elmJson.proxy) {
       return elmJson;
     }
@@ -37,7 +37,7 @@ function loadElmJson() {
 const envPublicUrl = process.env.PUBLIC_URL;
 
 function ensureSlash(path, needsSlash) {
-  const hasSlash = path.endsWith('/');
+  const hasSlash = path.endsWith("/");
   if (hasSlash && !needsSlash) {
     return path.substr(path, path.length - 1);
   } else if (!hasSlash && needsSlash) {
@@ -46,7 +46,7 @@ function ensureSlash(path, needsSlash) {
   return path;
 }
 
-const getPublicUrl = appConfig => {
+const getPublicUrl = (appConfig) => {
   if (envPublicUrl) {
     return envPublicUrl;
   }
@@ -62,24 +62,24 @@ const getPublicUrl = appConfig => {
 function getServedPath(appConfig) {
   const publicUrl = getPublicUrl(appConfig);
   const servedUrl =
-    envPublicUrl || (publicUrl ? url.parse(publicUrl).pathname : '/');
+    envPublicUrl || (publicUrl ? url.parse(publicUrl).pathname : "/");
   return ensureSlash(servedUrl, true);
 }
 
 module.exports = {
-  appPath: resolveApp('.'),
-  appPublic: resolveApp('./public'),
-  appHtml: resolveApp('./public/index.html'),
-  appIndexJs: resolveApp('./src/index.js'),
-  appSrc: resolveApp('./src'),
-  dotenv: resolveApp('./.env'),
-  entry: resolveApp('./src/index.js'),
-  appBuild: resolveApp('./build'),
-  elmJson: resolveApp('./elm.json'),
-  elm: require.resolve('elm/bin/elm'),
+  appPath: resolveApp("."),
+  appPublic: resolveApp("./public"),
+  appHtml: resolveApp("./public/index.html"),
+  appIndexJs: resolveApp("./src/index.js"),
+  appSrc: resolveApp("./src"),
+  dotenv: resolveApp("./.env"),
+  entry: resolveApp("./src/index.js"),
+  appBuild: resolveApp("./build"),
+  elmJson: resolveApp("./elm.json"),
+  elm: require.resolve("elm/bin/elm"),
   publicUrl: getPublicUrl(config),
   servedPath: getServedPath(config),
   proxy: config.proxy,
   setupProxy: config.setupProxy,
-  configureWebpack
+  configureWebpack,
 };

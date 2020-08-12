@@ -7,6 +7,9 @@ elm-stuff
 # elm-repl generated files
 repl-temp-*
 
+# postcss-elm-css-tailwind generated files
+/gen
+
 # Dependency directories
 node_modules
 
