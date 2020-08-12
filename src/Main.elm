@@ -2,10 +2,8 @@ module Main exposing (..)
 
 import Browser
 import Html
-import Html.Styled exposing (Html, div, h1, img, text)
-import Html.Styled.Attributes exposing (css, src)
-import Tailwind.Breakpoints exposing (..)
-import Tailwind.Utilities exposing (..)
+import Html.Styled
+import View
 
 
 
@@ -13,12 +11,13 @@ import Tailwind.Utilities exposing (..)
 
 
 type alias Model =
-    {}
+    { shoppingItems : List String
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( {}, Cmd.none )
+    ( { shoppingItems = [ "Milch", "Stuff" ] }, Cmd.none )
 
 
 
@@ -40,16 +39,19 @@ update msg model =
 
 view : Model -> Html.Html Msg
 view model =
-    Html.Styled.toUnstyled <|
-        div
-            [ css
-                [ bg_purple_500
-                , atBreakpoint [ ( sm, bg_red_800 ), ( lg, bg_green_200 ) ]
-                ]
-            ]
-            [ img [ src "/logo.svg" ] []
-            , h1 [] [ text "Your Elm App is working!" ]
-            ]
+    Html.Styled.toUnstyled
+        (View.shoppingList
+            { items =
+                List.map (\name -> View.shoppingListItem { name = name, onClick = NoOp })
+                    model.shoppingItems
+            , input =
+                View.shoppingListInput
+                    { onSubmit = NoOp
+                    , onInput = \_ -> NoOp
+                    , inputText = ""
+                    }
+            }
+        )
 
 
 
