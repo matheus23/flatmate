@@ -1,5 +1,5 @@
 # Distribution
-dist/
+build/
 
 # elm-package generated files
 elm-stuff
@@ -12,9 +12,3 @@ node_modules
 
 # Desktop Services Store on macOS
 .DS_Store
-
-# Idk
-/.cache
-
-# elm-postcss-tailwind generated modules
-/gen
