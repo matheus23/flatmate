@@ -9,13 +9,15 @@ import View
 
 port kintoSend : { command : String, shoppingItem : String } -> Cmd msg
 
+port kintoReceive : (List {title: String, id: Id} -> msg) -> Sub msg
 
+type alias Id = String
 
 ---- MODEL ----
 
 
 type alias Model =
-    { shoppingItems : List String
+    { shoppingItems : List { title: String, id: Id }
     , inputText : String
     }
 
@@ -25,7 +27,7 @@ init =
     ( { shoppingItems = []
       , inputText = ""
       }
-    , Cmd.none
+    , kintoSend {command="list-items", shoppingItem =""}
     )
 
 
@@ -35,9 +37,10 @@ init =
 
 type Msg
     = NoOp
-    | RemoveShoppingItem Int
+    | RemoveShoppingItem Id
     | ChangeNewShoppingItem String
     | AddNewShoppingItem
+    | ReceivedShoppingListUpdate (List {title: String, id: String})
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -46,9 +49,9 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        RemoveShoppingItem index ->
-            ( { model | shoppingItems = List.removeAt index model.shoppingItems }
-            , Cmd.none
+        RemoveShoppingItem id ->
+            ( model
+            , kintoSend {command="remove-item", shoppingItem = id}
             )
 
         ChangeNewShoppingItem newName ->
@@ -57,8 +60,13 @@ update msg model =
             )
 
         AddNewShoppingItem ->
-            ( { model | inputText = "", shoppingItems = model.inputText :: model.shoppingItems }
+            ( { model | inputText = ""}
             , kintoSend { command = "add-item", shoppingItem = model.inputText }
+            )
+
+        ReceivedShoppingListUpdate newList ->
+            ( {model | shoppingItems = newList}
+            , Cmd.none
             )
 
 
@@ -71,12 +79,12 @@ view model =
     Html.Styled.toUnstyled
         (View.shoppingList
             { items =
-                List.indexedMap
-                    (\index name ->
-                        ( name
+                List.map
+                    (\{title, id} ->
+                        ( title
                         , View.shoppingListItem
-                            { name = name
-                            , onClick = RemoveShoppingItem index
+                            { name = title
+                            , onClick = RemoveShoppingItem id
                             }
                         )
                     )
@@ -101,5 +109,9 @@ main =
         { view = view
         , init = \_ -> init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    kintoReceive ReceivedShoppingListUpdate
