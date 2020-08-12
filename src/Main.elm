@@ -1,10 +1,13 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import Html
 import Html.Styled
 import List.Extra as List
 import View
+
+
+port kintoSend : { command : String, shoppingItem : String } -> Cmd msg
 
 
 
@@ -19,7 +22,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { shoppingItems = [ "Milch", "Stuff" ]
+    ( { shoppingItems = []
       , inputText = ""
       }
     , Cmd.none
@@ -55,7 +58,7 @@ update msg model =
 
         AddNewShoppingItem ->
             ( { model | inputText = "", shoppingItems = model.inputText :: model.shoppingItems }
-            , Cmd.none
+            , kintoSend { command = "add-item", shoppingItem = model.inputText }
             )
 
 
