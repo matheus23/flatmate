@@ -3,12 +3,15 @@
 ## Step 1: The Shopping List
 
 * [X] Hardcode shopping list items in Elm app
-* [ ] Add Kinto JS lib
-  - [ ] Make sure TS defs work / TS works (VS Code checks might be enough)
-* [ ] Local Kinto ?
+* [X] Add Kinto JS lib
+  - [X] Make sure TS defs work / TS works (VS Code checks might be enough)
+* [X] Local Kinto ?
 * [ ] Hardcode Auth
 * [ ] Create buckets etc. in admin interface, hardcode bucket ids etc.
+  - [ ] Think through what collections we need, the schemas, etc.
 * [ ] Ports to KintoJs
+  - [X] First rudimentary port
+  - [ ] Proper port structure
 * [ ] Dynamic (/synced) shopping list :)
 
 * [ ] Design shopping list (?)
