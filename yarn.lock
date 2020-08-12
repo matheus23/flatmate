@@ -7939,10 +7939,10 @@ postcss-cli@^7.1.1:
     read-cache "^1.0.0"
     yargs "^15.0.2"
 
-postcss-elm-css-tailwind@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/postcss-elm-css-tailwind/-/postcss-elm-css-tailwind-0.4.1.tgz#f9ee454da63f6daf146481d1f73b398080e2ae0a"
-  integrity sha512-fR0QUWK4oPIYGGbHzMQ0iRTtLAsZ56RIdQYK2JYrNZyPl+67JjxFB7niyfiUxvXpKO/PWS8oNzBAtz0lpC0z3w==
+postcss-elm-css-tailwind@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/postcss-elm-css-tailwind/-/postcss-elm-css-tailwind-0.6.0.tgz#a47df18a9ad2b3ec0f0a289fc40284aec03a81d1"
+  integrity sha512-VVXqNfNMNOx2YjBc2AiMDvIacK8cvTGZChkdItACLaLi10+cZq3706T4bM+j56+7BCPZWmktqqjUtbhI8mFalg==
 
 postcss-functions@^3.0.0:
   version "3.0.0"

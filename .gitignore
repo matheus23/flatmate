@@ -17,4 +17,4 @@ node_modules
 /.cache
 
 # elm-postcss-tailwind generated modules
-/src/TW/
+/gen

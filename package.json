@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "yarn gen:TW && webpack --env.buildfor=production --config scripts/webpack.config.js --progress",
+    "build": "webpack --env.buildfor=production --config scripts/webpack.config.js --progress",
     "dev": "webpack-dev-server --env.buildfor=development --mode development --config scripts/webpack.config.js --hot",
     "gen:TW": "postcss -o /dev/null ./css/tailwind.css --config scripts/tailwind/postcss.config.js"
   },
@@ -21,7 +21,7 @@
     "orbit-db": "^0.24.2",
     "orbit-db-keystore": "0.3.4",
     "postcss-cli": "^7.1.1",
-    "postcss-elm-css-tailwind": "^0.4.1",
+    "postcss-elm-css-tailwind": "^0.6.0",
     "postcss-loader": "^3.0.0",
     "secp256k1": "3.8.0",
     "style-loader": "^1.2.1",
