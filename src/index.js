@@ -25,17 +25,17 @@ function attachPorts() {
 
   app.ports.kintoSend.subscribe(async (message) => {
     switch (message.command) {
-      case "add-item":
-        await shoppingList.create({ title: message.shoppingItem, content: "empty!" });
+      case "add":
+        await shoppingList.create({ title: message.title, content: "empty!" });
         await sendCurrentList()
         break;
-      case "update-item":
-        shoppingList.update(message.shoppingItem);
+      case "update":
+        shoppingList.update(message.item);
       case "list-items":
         await sendCurrentList()
         break;
-      case "remove-item":
-        await shoppingList.delete(message.shoppingItem)
+      case "remove":
+        await shoppingList.delete(message.id)
         await sendCurrentList()
       case "sync":
         const ads = await shoppingList.sync();

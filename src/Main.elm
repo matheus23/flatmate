@@ -1,23 +1,19 @@
-port module Main exposing (..)
+module Main exposing (..)
 
 import Browser
 import Html
 import Html.Styled
+import Kinto
 import List.Extra as List
 import View
 
 
-port kintoSend : { command : String, shoppingItem : String } -> Cmd msg
-
-port kintoReceive : (List {title: String, id: Id} -> msg) -> Sub msg
-
-type alias Id = String
 
 ---- MODEL ----
 
 
 type alias Model =
-    { shoppingItems : List { title: String, id: Id }
+    { shoppingItems : List { title : String, id : Kinto.Id }
     , inputText : String
     }
 
@@ -27,7 +23,7 @@ init =
     ( { shoppingItems = []
       , inputText = ""
       }
-    , kintoSend {command="list-items", shoppingItem =""}
+    , Kinto.send <| Kinto.FetchList
     )
 
 
@@ -37,10 +33,10 @@ init =
 
 type Msg
     = NoOp
-    | RemoveShoppingItem Id
+    | RemoveShoppingItem Kinto.Id
     | ChangeNewShoppingItem String
     | AddNewShoppingItem
-    | ReceivedShoppingListUpdate (List {title: String, id: String})
+    | ReceivedShoppingListUpdate (List { title : String, id : Kinto.Id })
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -51,7 +47,7 @@ update msg model =
 
         RemoveShoppingItem id ->
             ( model
-            , kintoSend {command="remove-item", shoppingItem = id}
+            , Kinto.send <| Kinto.RemoveItem id
             )
 
         ChangeNewShoppingItem newName ->
@@ -60,12 +56,12 @@ update msg model =
             )
 
         AddNewShoppingItem ->
-            ( { model | inputText = ""}
-            , kintoSend { command = "add-item", shoppingItem = model.inputText }
+            ( { model | inputText = "" }
+            , Kinto.send <| Kinto.Add { title = model.inputText }
             )
 
         ReceivedShoppingListUpdate newList ->
-            ( {model | shoppingItems = newList}
+            ( { model | shoppingItems = newList }
             , Cmd.none
             )
 
@@ -80,7 +76,7 @@ view model =
         (View.shoppingList
             { items =
                 List.map
-                    (\{title, id} ->
+                    (\{ title, id } ->
                         ( title
                         , View.shoppingListItem
                             { name = title
@@ -112,6 +108,7 @@ main =
         , subscriptions = subscriptions
         }
 
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    kintoReceive ReceivedShoppingListUpdate
+    Kinto.receive ReceivedShoppingListUpdate
