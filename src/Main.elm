@@ -3,6 +3,7 @@ module Main exposing (..)
 import Browser
 import Html
 import Html.Styled
+import List.Extra as List
 import View
 
 
@@ -12,12 +13,17 @@ import View
 
 type alias Model =
     { shoppingItems : List String
+    , inputText : String
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { shoppingItems = [ "Milch", "Stuff" ] }, Cmd.none )
+    ( { shoppingItems = [ "Milch", "Stuff" ]
+      , inputText = ""
+      }
+    , Cmd.none
+    )
 
 
 
@@ -26,11 +32,31 @@ init =
 
 type Msg
     = NoOp
+    | RemoveShoppingItem Int
+    | ChangeNewShoppingItem String
+    | AddNewShoppingItem
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        RemoveShoppingItem index ->
+            ( { model | shoppingItems = List.removeAt index model.shoppingItems }
+            , Cmd.none
+            )
+
+        ChangeNewShoppingItem newName ->
+            ( { model | inputText = newName }
+            , Cmd.none
+            )
+
+        AddNewShoppingItem ->
+            ( { model | inputText = "", shoppingItems = model.inputText :: model.shoppingItems }
+            , Cmd.none
+            )
 
 
 
@@ -42,13 +68,21 @@ view model =
     Html.Styled.toUnstyled
         (View.shoppingList
             { items =
-                List.map (\name -> View.shoppingListItem { name = name, onClick = NoOp })
+                List.indexedMap
+                    (\index name ->
+                        ( name
+                        , View.shoppingListItem
+                            { name = name
+                            , onClick = RemoveShoppingItem index
+                            }
+                        )
+                    )
                     model.shoppingItems
             , input =
                 View.shoppingListInput
-                    { onSubmit = NoOp
-                    , onInput = \_ -> NoOp
-                    , inputText = ""
+                    { onSubmit = AddNewShoppingItem
+                    , onInput = ChangeNewShoppingItem
+                    , inputText = model.inputText
                     }
             }
         )

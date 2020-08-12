@@ -3,11 +3,12 @@ module View exposing (..)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (alt, css, for, id, placeholder, src, title, type_, value)
 import Html.Styled.Events as Events
+import Html.Styled.Keyed as Keyed
 import Tailwind.Breakpoints exposing (..)
 import Tailwind.Utilities exposing (..)
 
 
-shoppingList : { input : Html msg, items : List (Html msg) } -> Html msg
+shoppingList : { input : Html msg, items : List ( String, Html msg ) } -> Html msg
 shoppingList { items, input } =
     div [ css [ py_24, flex, flex_col ] ]
         [ div
@@ -19,8 +20,7 @@ shoppingList { items, input } =
                 , w_full
                 ]
             ]
-            [ ul [ css [ flex, flex_col ] ] <|
-                items
+            [ Keyed.ul [ css [ flex, flex_col ] ] items
             , input
             ]
         ]
@@ -44,12 +44,12 @@ shoppingListInput { inputText, onSubmit, onInput } =
             [ type_ "text"
             , placeholder "Milch / Eier / Kartoffeln"
             , value inputText
+            , Events.onInput onInput
             , css [ w_full ]
             ]
             []
         , input
             [ type_ "submit"
-            , Events.onInput onInput
             , css [ ml_2 ]
             , value "Add"
             ]
