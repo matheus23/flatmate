@@ -23,29 +23,34 @@ function attachPorts() {
     app.ports.kintoReceive.send(currentList.data);
   }
 
-  app.ports.kintoSend.subscribe(async (message) => {
-    switch (message.command) {
-      case "add":
-        await shoppingList.create({ title: message.title, content: "empty!" });
-        await sendCurrentList()
-        break;
-      case "update":
-        shoppingList.update(message.item);
-      case "list-items":
-        await sendCurrentList()
-        break;
-      case "remove":
-        await shoppingList.delete(message.id)
-        await sendCurrentList()
-      case "sync":
-        const ads = await shoppingList.sync();
-        console.log(ads)
-      
-      default:
-        console.error(`unknown command`, message);
+  const commands = {
+    add: async title => {
+      await shoppingList.create({ title: title, content: "empty!" });
+      await sendCurrentList()
+    },
+    update: async ({item}) => {
+      await shoppingList.update(item);
+      await sendCurrentList()
+    },
+    delete: async id => {
+      await shoppingList.delete(id)
+      await sendCurrentList();
+    },
+    fetchList : async () => {
+      await sendCurrentList();
     }
+  }
+
+  app.ports.kintoSend.subscribe(async ({command, argument}) => {
+    const executor = commands[command]
+    if(!executor) {
+      console.error("unknown command", command)
+      return;
+    }
+    await executor(argument)
   });
 }
+
 attachPorts(app)
 
 

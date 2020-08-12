@@ -4,7 +4,7 @@ import Html.Attributes exposing (id)
 import Json.Encode as E
 
 
-port kintoSend : E.Value -> Cmd msg
+port kintoSend : { command : String, argument : E.Value } -> Cmd msg
 
 
 send : KintoCommand -> Cmd msg
@@ -16,38 +16,35 @@ type KintoCommand
     = Add { title : String }
     | Update { title : String, id : Id }
     | FetchList
-    | RemoveItem Id
+    | DeleteItem Id
 
 
-encodeKintoCommand : KintoCommand -> E.Value
+encodeKintoCommand : KintoCommand -> { command : String, argument : E.Value }
 encodeKintoCommand cmd =
     case cmd of
         Add { title } ->
-            E.object
-                [ ( "command", E.string "add" )
-                , ( "title", E.string title )
-                ]
+            { command = "add"
+            , argument = E.string title
+            }
 
         Update { title, id } ->
-            E.object
-                [ ( "command", E.string "update" )
-                , ( "item"
-                  , E.object
-                        [ ( "id", E.string <| unwrap id )
-                        , ( "title", E.string <| title )
-                        ]
-                  )
-                ]
+            { command = "update"
+            , argument =
+                E.object
+                    [ ( "id", E.string <| unwrap id )
+                    , ( "title", E.string <| title )
+                    ]
+            }
 
         FetchList ->
-            E.object
-                [ ( "command", E.string "list-items" ) ]
+            { command = "fetchList"
+            , argument = E.null
+            }
 
-        RemoveItem id ->
-            E.object
-                [ ( "command", E.string "remove" )
-                , ( "id", E.string <| unwrap id )
-                ]
+        DeleteItem id ->
+            { command = "delete"
+            , argument = E.string <| unwrap id
+            }
 
 
 type Id

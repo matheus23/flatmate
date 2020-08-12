@@ -47,7 +47,7 @@ update msg model =
 
         RemoveShoppingItem id ->
             ( model
-            , Kinto.send <| Kinto.RemoveItem id
+            , Kinto.send <| Kinto.DeleteItem id
             )
 
         ChangeNewShoppingItem newName ->
