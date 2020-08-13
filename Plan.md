@@ -9,11 +9,12 @@
 * [ ] Hardcode Auth
 * [ ] Create buckets etc. in admin interface, hardcode bucket ids etc.
   - [ ] Think through what collections we need, the schemas, etc.
+  - [ ] Figure out how sorting shopping list items should work
 * [ ] Ports to KintoJs
   - [X] First rudimentary port
   - [ ] Proper port structure
   - [ ] Send Json.Values through ports and validate records on the elm side (with some error handling)
-* [ ] Dynamic (/synced) shopping list :)
+* [X] Dynamic (/synced) shopping list :)
 
 * [ ] Design shopping list (?)
 
