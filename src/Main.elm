@@ -77,12 +77,12 @@ view model =
             { items =
                 List.map
                     (\{ title, id } ->
-                        ( title
-                        , View.shoppingListItem
-                            { name = title
-                            , onClick = RemoveShoppingItem id
-                            }
-                        )
+                        Kinto.keyedWith id
+                            (View.shoppingListItem
+                                { name = title
+                                , onClick = RemoveShoppingItem id
+                                }
+                            )
                     )
                     model.shoppingItems
             , input =

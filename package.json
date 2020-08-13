@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build.js",
-    "start": "node scripts/start.js",
+    "start": "node scripts/start.js --no-browser",
     "gen:tailwind": "postcss -o ./gen/generated-tailwind.css ./tailwind/tailwind.css --config tailwind/postcss.config.js",
     "start:kinto": "docker-compose --file kinto-server/docker-compose.yml up",
     "make": "elm make",

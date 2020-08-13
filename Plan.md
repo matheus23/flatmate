@@ -12,6 +12,7 @@
 * [ ] Ports to KintoJs
   - [X] First rudimentary port
   - [ ] Proper port structure
+  - [ ] Send Json.Values through ports and validate records on the elm side (with some error handling)
 * [ ] Dynamic (/synced) shopping list :)
 
 * [ ] Design shopping list (?)

@@ -10,7 +10,8 @@ import Kinto from "kinto";
 const app = Elm.Main.init({
   node: document.getElementById("root"),
 });
-function attachPorts() {
+
+function attachPorts(app) {
 
   const kinto = new Kinto({
     remote: "http://localhost:8888/v1/",

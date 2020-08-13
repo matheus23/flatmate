@@ -1,4 +1,4 @@
-port module Kinto exposing (Id, KintoCommand(..), receive, send)
+port module Kinto exposing (Id, KintoCommand(..), keyedWith, receive, send)
 
 import Html.Attributes exposing (id)
 import Json.Encode as E
@@ -66,3 +66,8 @@ receive onMsg =
             { title = title, id = Id id }
     in
     kintoReceive (List.map wrap >> onMsg)
+
+
+keyedWith : Id -> a -> ( String, a )
+keyedWith (Id id) view =
+    ( id, view )
