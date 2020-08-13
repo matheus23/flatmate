@@ -11,18 +11,21 @@ const app = Elm.Main.init({
   node: document.getElementById("root"),
 });
 
-function attachPorts(app) {
+const kinto = new Kinto({
+  remote: "http://localhost:8888/v1/",
+  bucket: "shopping-list-test",
+});
+window.kinto = kinto;
 
-  const kinto = new Kinto({
-    remote: "http://localhost:8888/v1/",
-    bucket: "shopping-list-test",
-  });
-  const shoppingList = kinto.collection("shopping-list");
-  
-  const sendCurrentList = async () => {
-    const currentList = await shoppingList.list();
-    app.ports.kintoReceive.send(currentList.data);
-  }
+const shoppingList = kinto.collection("shopping-list");
+window.shoppingList = shoppingList;
+
+const sendCurrentList = async () => {
+  const currentList = await shoppingList.list();
+  app.ports.kintoReceive.send(currentList.data);
+}
+
+function attachPorts(app) {
 
   const commands = {
     add: async title => {
@@ -52,7 +55,27 @@ function attachPorts(app) {
   });
 }
 
+async function synchronize() {
+  try {
+    const result = await shoppingList.sync();
+    if (!result.ok) {
+      throw new Error(result);
+    }
+    await sendCurrentList();
+  } catch (e) {
+    console.error("Sync unsuccessful");
+    console.error(e);
+  }
+}
+
+async function syncLoop() {
+  await synchronize();
+  setTimeout(syncLoop, 500);
+}
+
+
 attachPorts(app)
+syncLoop();
 
 
 // If you want your app to work offline and load faster, you can change
