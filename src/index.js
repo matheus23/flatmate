@@ -32,7 +32,7 @@ function attachPorts(app) {
       await shoppingList.create({ title: title, content: "empty!" });
       await sendCurrentList()
     },
-    update: async ({item}) => {
+    update: async ({ item }) => {
       await shoppingList.update(item);
       await sendCurrentList()
     },
@@ -40,14 +40,14 @@ function attachPorts(app) {
       await shoppingList.delete(id)
       await sendCurrentList();
     },
-    fetchList : async () => {
+    fetchList: async () => {
       await sendCurrentList();
     }
   }
 
-  app.ports.kintoSend.subscribe(async ({command, argument}) => {
+  app.ports.kintoSend.subscribe(async ({ command, argument }) => {
     const executor = commands[command]
-    if(!executor) {
+    if (!executor) {
       console.error("unknown command", command)
       return;
     }
