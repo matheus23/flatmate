@@ -2,6 +2,11 @@
 
 ## Step 1: The Shopping List
 
+* [ ] IMPORTANT: Setup testing with elm-platform-test
+  - [ ] Exchange commands for 'Effects'
+  - [ ] Mock KintoJs in Elm
+  - [ ] Write UI tests with mocked kintojs
+
 * [X] Hardcode shopping list items in Elm app
 * [X] Add Kinto JS lib
   - [X] Make sure TS defs work / TS works (VS Code checks might be enough)
@@ -19,6 +24,7 @@
 * [ ] Design shopping list (?)
 
 ## Step 2: An Actual App
+
 Routes
 * [ ] Figure out auth flow
 * [ ] Figure out flat creation flow
