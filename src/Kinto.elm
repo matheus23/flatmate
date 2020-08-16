@@ -1,6 +1,6 @@
-port module Kinto exposing (Command(..), Id, encodeCommand, keyedWith, receive, send)
+port module Kinto exposing (Command(..), Id, codecCommand, keyedWith, receive, send)
 
-import Html.Attributes exposing (id)
+import Codec exposing (Codec)
 import Json.Encode as E
 
 
@@ -8,8 +8,8 @@ port kintoSend : E.Value -> Cmd msg
 
 
 send : Command -> Cmd msg
-send =
-    encodeCommand >> kintoSend
+send command =
+    kintoSend (Codec.encoder codecCommand command)
 
 
 type Command
@@ -19,35 +19,44 @@ type Command
     | DeleteItem Id
 
 
-encodeCommand : Command -> E.Value
-encodeCommand cmd =
-    case cmd of
-        Add { title } ->
-            E.object
-                [ ( "command", E.string "add" )
-                , ( "argument", E.string title )
-                ]
+codecCommand : Codec Command
+codecCommand =
+    Codec.custom
+        (\add update fetchList deleteItem value ->
+            case value of
+                Add info ->
+                    add info
 
-        Update { title, id } ->
-            E.object
-                [ ( "command", E.string "update" )
-                , ( "argument"
-                  , E.object
-                        [ ( "id", E.string <| unwrap id )
-                        , ( "title", E.string <| title )
-                        ]
-                  )
-                ]
+                Update info ->
+                    update info
 
-        FetchList ->
-            E.object
-                [ ( "command", E.string "fetchList" ) ]
+                FetchList ->
+                    fetchList
 
-        DeleteItem id ->
-            E.object
-                [ ( "command", E.string "delete" )
-                , ( "argument", E.string <| unwrap id )
-                ]
+                DeleteItem info ->
+                    deleteItem info
+        )
+        |> Codec.variant1 "Add"
+            Add
+            (Codec.object (\title -> { title = title })
+                |> Codec.field "title" .title Codec.string
+                |> Codec.buildObject
+            )
+        |> Codec.variant1 "Update"
+            Update
+            (Codec.object (\title id -> { title = title, id = id })
+                |> Codec.field "title" .title Codec.string
+                |> Codec.field "id" .id codecId
+                |> Codec.buildObject
+            )
+        |> Codec.variant0 "FetchList" FetchList
+        |> Codec.variant1 "DeleteItem" DeleteItem codecId
+        |> Codec.buildCustom
+
+
+codecId : Codec Id
+codecId =
+    Codec.string |> Codec.map Id unwrap
 
 
 type Id
