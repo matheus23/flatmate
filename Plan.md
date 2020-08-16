@@ -6,7 +6,8 @@
   - [X] Exchange commands for 'Effects'
   - [ ] Also mock subscriptions (need to figure out how to do that first)
   - [ ] Mock KintoJs in Elm
-  - [ ] Write UI tests with mocked kintojs
+    - [ ] Figure out how/whether to do that
+  - [ ] Write more UI tests
 
 * [X] Hardcode shopping list items in Elm app
 * [X] Add Kinto JS lib
