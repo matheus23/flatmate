@@ -3,7 +3,8 @@
 ## Step 1: The Shopping List
 
 * [ ] IMPORTANT: Setup testing with elm-platform-test
-  - [ ] Exchange commands for 'Effects'
+  - [X] Exchange commands for 'Effects'
+  - [ ] Also mock subscriptions (need to figure out how to do that first)
   - [ ] Mock KintoJs in Elm
   - [ ] Write UI tests with mocked kintojs
 

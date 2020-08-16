@@ -1,4 +1,4 @@
-port module Kinto exposing (Command(..), Id, codecCommand, keyedWith, receive, send)
+port module Kinto exposing (Command(..), Id, codecCommand, codecReceive, keyedWith, receive, send)
 
 import Codec exposing (Codec)
 import Json.Encode as E
@@ -42,16 +42,18 @@ codecCommand =
                 |> Codec.field "title" .title Codec.string
                 |> Codec.buildObject
             )
-        |> Codec.variant1 "Update"
-            Update
-            (Codec.object (\title id -> { title = title, id = id })
-                |> Codec.field "title" .title Codec.string
-                |> Codec.field "id" .id codecId
-                |> Codec.buildObject
-            )
+        |> Codec.variant1 "Update" Update codecRecordWithId
         |> Codec.variant0 "FetchList" FetchList
         |> Codec.variant1 "DeleteItem" DeleteItem codecId
         |> Codec.buildCustom
+
+
+codecRecordWithId : Codec { title : String, id : Id }
+codecRecordWithId =
+    Codec.object (\title id -> { title = title, id = id })
+        |> Codec.field "title" .title Codec.string
+        |> Codec.field "id" .id codecId
+        |> Codec.buildObject
 
 
 codecId : Codec Id
@@ -69,6 +71,11 @@ unwrap (Id id) =
 
 
 port kintoReceive : (List { title : String, id : String } -> msg) -> Sub msg
+
+
+codecReceive : Codec (List { title : String, id : Id })
+codecReceive =
+    Codec.list codecRecordWithId
 
 
 receive : (List { title : String, id : Id } -> msg) -> Sub msg

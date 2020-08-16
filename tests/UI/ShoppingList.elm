@@ -1,5 +1,6 @@
 module UI.ShoppingList exposing (all)
 
+import Codec
 import Effect
 import Expect
 import Json.Decode as Decode
@@ -36,11 +37,13 @@ start =
                     Effect.KintoSend cmd ->
                         SimulatedEffect.Ports.send
                             "kintoSend"
-                            (Kinto.encodeCommand cmd)
+                            (Codec.encoder Kinto.codecCommand cmd)
             )
         |> Program.withSimulatedSubscriptions
-            (\model ->
-                SimulatedEffect.Sub.none
+            (\_ ->
+                SimulatedEffect.Ports.subscribe "receive"
+                    (Codec.decoder Kinto.codecReceive)
+                    Main.ReceivedShoppingListUpdate
             )
         |> Program.start ()
 
@@ -51,11 +54,10 @@ all =
         [ test "adding a shopping list item adds it to the list" <|
             \() ->
                 start
+                    |> expectKintoSend Kinto.FetchList
                     |> Program.fillIn View.shoppingListInputInfo.id View.shoppingListInputInfo.label "Milk"
                     |> Program.clickButton "Add"
-                    |> Program.ensureOutgoingPortValues "kintoSend"
-                        Decode.value
-                        (Expect.equal [ Kinto.encodeCommand (Kinto.Add { title = "Milk" }) ])
+                    |> expectKintoSend (Kinto.Add { title = "Milk" })
                     |> Program.simulateIncomingPort "receive"
                         (Encode.list Encode.object
                             [ [ ( "title", Encode.string "Milk" )
@@ -71,3 +73,10 @@ all =
                             ]
                         )
         ]
+
+
+expectKintoSend : Kinto.Command -> ProgramTest model msg effect -> ProgramTest model msg effect
+expectKintoSend command =
+    Program.ensureOutgoingPortValues "kintoSend"
+        (Codec.decoder Kinto.codecCommand)
+        (Expect.equal [ command ])
