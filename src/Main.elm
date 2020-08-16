@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Browser
+import Effect exposing (Effect)
 import Html
 import Html.Styled
 import Kinto
@@ -18,12 +19,12 @@ type alias Model =
     }
 
 
-init : ( Model, Cmd Msg )
+init : ( Model, Effect )
 init =
     ( { shoppingItems = []
       , inputText = ""
       }
-    , Kinto.send <| Kinto.FetchList
+    , Effect.KintoSend Kinto.FetchList
     )
 
 
@@ -39,30 +40,30 @@ type Msg
     | ReceivedShoppingListUpdate (List { title : String, id : Kinto.Id })
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Effect )
 update msg model =
     case msg of
         NoOp ->
-            ( model, Cmd.none )
+            ( model, Effect.None )
 
         RemoveShoppingItem id ->
             ( model
-            , Kinto.send <| Kinto.DeleteItem id
+            , Effect.KintoSend (Kinto.DeleteItem id)
             )
 
         ChangeNewShoppingItem newName ->
             ( { model | inputText = newName }
-            , Cmd.none
+            , Effect.None
             )
 
         AddNewShoppingItem ->
             ( { model | inputText = "" }
-            , Kinto.send <| Kinto.Add { title = model.inputText }
+            , Effect.KintoSend (Kinto.Add { title = model.inputText })
             )
 
         ReceivedShoppingListUpdate newList ->
             ( { model | shoppingItems = newList }
-            , Cmd.none
+            , Effect.None
             )
 
 
@@ -103,8 +104,8 @@ main : Program () Model Msg
 main =
     Browser.element
         { view = view
-        , init = \_ -> init
-        , update = update
+        , init = \_ -> init |> Tuple.mapSecond Effect.perform
+        , update = \msg model -> update msg model |> Tuple.mapSecond Effect.perform
         , subscriptions = subscriptions
         }
 

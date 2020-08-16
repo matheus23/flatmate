@@ -25,9 +25,14 @@
     },
     "test-dependencies": {
         "direct": {
-            "elm-explorations/test": "1.2.2"
+            "elm-explorations/test": "1.2.2",
+            "avh4/elm-program-test": "3.3.0"
         },
         "indirect": {
+            "avh4/elm-fifo": "1.0.4",
+            "elm/bytes": "1.0.8",
+            "elm/file": "1.0.5",
+            "elm/http": "2.0.0",
             "elm/random": "1.0.0"
         }
     }

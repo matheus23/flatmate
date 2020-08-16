@@ -1,7 +1,7 @@
 module View exposing (..)
 
 import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (alt, css, for, id, placeholder, src, title, type_, value)
+import Html.Styled.Attributes exposing (alt, attribute, css, for, id, placeholder, src, title, type_, value)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
 import Tailwind.Breakpoints exposing (..)
@@ -42,6 +42,8 @@ shoppingListInput { inputText, onSubmit, onInput } =
         ]
         [ input
             [ type_ "text"
+            , id shoppingListInputInfo.id
+            , attribute "aria-label" shoppingListInputInfo.label
             , placeholder "Milch / Eier / Kartoffeln"
             , value inputText
             , Events.onInput onInput
@@ -55,3 +57,10 @@ shoppingListInput { inputText, onSubmit, onInput } =
             ]
             []
         ]
+
+
+shoppingListInputInfo : { id : String, label : String }
+shoppingListInputInfo =
+    { id = "shopping-list-input"
+    , label = "New Shopping List Item"
+    }

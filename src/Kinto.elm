@@ -1,50 +1,53 @@
-port module Kinto exposing (Id, KintoCommand(..), keyedWith, receive, send)
+port module Kinto exposing (Command(..), Id, encodeCommand, keyedWith, receive, send)
 
 import Html.Attributes exposing (id)
 import Json.Encode as E
 
 
-port kintoSend : { command : String, argument : E.Value } -> Cmd msg
+port kintoSend : E.Value -> Cmd msg
 
 
-send : KintoCommand -> Cmd msg
+send : Command -> Cmd msg
 send =
-    encodeKintoCommand >> kintoSend
+    encodeCommand >> kintoSend
 
 
-type KintoCommand
+type Command
     = Add { title : String }
     | Update { title : String, id : Id }
     | FetchList
     | DeleteItem Id
 
 
-encodeKintoCommand : KintoCommand -> { command : String, argument : E.Value }
-encodeKintoCommand cmd =
+encodeCommand : Command -> E.Value
+encodeCommand cmd =
     case cmd of
         Add { title } ->
-            { command = "add"
-            , argument = E.string title
-            }
+            E.object
+                [ ( "command", E.string "add" )
+                , ( "argument", E.string title )
+                ]
 
         Update { title, id } ->
-            { command = "update"
-            , argument =
-                E.object
-                    [ ( "id", E.string <| unwrap id )
-                    , ( "title", E.string <| title )
-                    ]
-            }
+            E.object
+                [ ( "command", E.string "update" )
+                , ( "argument"
+                  , E.object
+                        [ ( "id", E.string <| unwrap id )
+                        , ( "title", E.string <| title )
+                        ]
+                  )
+                ]
 
         FetchList ->
-            { command = "fetchList"
-            , argument = E.null
-            }
+            E.object
+                [ ( "command", E.string "fetchList" ) ]
 
         DeleteItem id ->
-            { command = "delete"
-            , argument = E.string <| unwrap id
-            }
+            E.object
+                [ ( "command", E.string "delete" )
+                , ( "argument", E.string <| unwrap id )
+                ]
 
 
 type Id
