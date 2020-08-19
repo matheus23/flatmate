@@ -2,14 +2,27 @@
 
 ## Step 1: The Shopping List
 
-* [ ] IMPORTANT: Setup testing with elm-platform-test
-  - [X] Exchange commands for 'Effects'
-  - [X] Also mock subscriptions (need to figure out how to do that first)
-  - [ ] Add 'user intention' hooks to View.ShoppingList module for elm-program-test use
-  - [ ] Mock KintoJs in Elm
-    - [ ] Figure out how/whether to do that
-      - It's possible via getOutgoingPortValues
-  - [ ] Fully specify UI using tests
+## UI
+
+* [X] Design shopping list
+* [X] Transfer figma styles to tailwind config
+* [X] Build static UI
+* [ ] Think through data schemas
+  - [ ] Figure out how sorting shopping list items should work
+* [ ] Make shopping list view dynamic, using new data schema
+
+## UI Specification
+
+* [X] Setup testing with elm-platform-test
+* [X] Exchange commands for 'Effects'
+* [X] Also mock subscriptions (need to figure out how to do that first)
+* [ ] Add 'user intention' hooks to View.ShoppingList module for elm-program-test use
+* [ ] Mock KintoJs in Elm
+  - [ ] Figure out how/whether to do that
+    - It's possible via getOutgoingPortValues
+* [ ] Fully specify UI using tests
+
+## Backend integration
 
 * [X] Hardcode shopping list items in Elm app
 * [X] Add Kinto JS lib
@@ -17,17 +30,11 @@
 * [X] Local Kinto ?
 * [ ] Hardcode Auth
 * [ ] Create buckets etc. in admin interface, hardcode bucket ids etc.
-  - [ ] Think through what collections we need, the schemas, etc.
-  - [ ] Figure out how sorting shopping list items should work
 * [ ] Ports to KintoJs
   - [X] First rudimentary port
   - [ ] Proper port structure
   - [ ] Send Json.Values through ports and validate records on the elm side (with some error handling)
 * [X] Dynamic (/synced) shopping list :)
-
-* [X] Design shopping list
-  * [X] Transfer figma styles to tailwind config
-  * [X] Build static UI
 
 ## Step 2: An Actual App
 
