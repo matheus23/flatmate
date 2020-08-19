@@ -7,6 +7,7 @@ import Html.Styled
 import Kinto
 import List.Extra as List
 import View
+import View.ShoppingList
 
 
 
@@ -74,29 +75,30 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     Html.Styled.toUnstyled
-        (View.shoppingList
-            { items =
-                List.map
-                    (\{ title, id } ->
-                        Kinto.keyedWith id
-                            (View.shoppingListItem
-                                { name = title
-                                , onClick = RemoveShoppingItem id
-                                }
-                            )
-                    )
-                    model.shoppingItems
-            , input =
-                View.shoppingListInput
-                    { onSubmit = AddNewShoppingItem
-                    , onInput = ChangeNewShoppingItem
-                    , inputText = model.inputText
-                    }
-            }
-        )
+        View.ShoppingList.view
 
 
 
+-- (View.shoppingList
+--     { items =
+--         List.map
+--             (\{ title, id } ->
+--                 Kinto.keyedWith id
+--                     (View.shoppingListItem
+--                         { name = title
+--                         , onClick = RemoveShoppingItem id
+--                         }
+--                     )
+--             )
+--             model.shoppingItems
+--     , input =
+--         View.shoppingListInput
+--             { onSubmit = AddNewShoppingItem
+--             , onInput = ChangeNewShoppingItem
+--             , inputText = model.inputText
+--             }
+--     }
+-- )
 ---- PROGRAM ----
 
 

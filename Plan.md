@@ -4,10 +4,12 @@
 
 * [ ] IMPORTANT: Setup testing with elm-platform-test
   - [X] Exchange commands for 'Effects'
-  - [ ] Also mock subscriptions (need to figure out how to do that first)
+  - [X] Also mock subscriptions (need to figure out how to do that first)
+  - [ ] Add 'user intention' hooks to View.ShoppingList module for elm-program-test use
   - [ ] Mock KintoJs in Elm
     - [ ] Figure out how/whether to do that
-  - [ ] Write more UI tests
+      - It's possible via getOutgoingPortValues
+  - [ ] Fully specify UI using tests
 
 * [X] Hardcode shopping list items in Elm app
 * [X] Add Kinto JS lib
@@ -25,8 +27,7 @@
 
 * [X] Design shopping list
   * [X] Transfer figma styles to tailwind config
-  * [ ] Build static UI
-  * [ ] Add 'user intention' hooks to view module for elm-program-test use
+  * [X] Build static UI
 
 ## Step 2: An Actual App
 
