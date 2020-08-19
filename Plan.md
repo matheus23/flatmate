@@ -24,7 +24,7 @@
 * [X] Dynamic (/synced) shopping list :)
 
 * [X] Design shopping list
-  * [ ] Transfer figma styles to tailwind config
+  * [X] Transfer figma styles to tailwind config
   * [ ] Build static UI
   * [ ] Add 'user intention' hooks to view module for elm-program-test use
 
