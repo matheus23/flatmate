@@ -23,7 +23,10 @@
   - [ ] Send Json.Values through ports and validate records on the elm side (with some error handling)
 * [X] Dynamic (/synced) shopping list :)
 
-* [ ] Design shopping list (?)
+* [X] Design shopping list
+  * [ ] Transfer figma styles to tailwind config
+  * [ ] Build static UI
+  * [ ] Add 'user intention' hooks to view module for elm-program-test use
 
 ## Step 2: An Actual App
 
