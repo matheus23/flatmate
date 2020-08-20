@@ -13,25 +13,16 @@ import View.ShoppingList
 ---- MODEL ----
 
 
-type alias ViewItem =
-    { checked : Bool
-    , name : String
-    , id : Ports.Id
-    , entryId : Ports.Id
-    }
-
-
 type alias Model =
-    { -- Für Carsten: 仕方がない :D
-      items : List ViewItem
-    , addItemInputValue : String
+    { shoppingItems : List { title : String, id : Ports.Id }
+    , inputText : String
     }
 
 
 init : ( Model, Effect )
 init =
-    ( { items = []
-      , addItemInputValue = ""
+    ( { shoppingItems = []
+      , inputText = ""
       }
     , Effect.None
     )
@@ -43,9 +34,6 @@ init =
 
 type Msg
     = NoOp
-    | ReceivedItemsUpdate (Ports.Receive Ports.Item)
-    | ReceivedEntriesUpdate (Ports.Receive Ports.Entry)
-    | OnAddItemInput String
 
 
 update : Msg -> Model -> ( Model, Effect )
@@ -54,28 +42,8 @@ update msg model =
         NoOp ->
             ( model, Effect.None )
 
-        ReceivedItemsUpdate items ->
-            ( { model | items = itemsFromDb items }
-            , Effect.None
-            )
-
-        ReceivedEntriesUpdate entries ->
-            -- TODO: Update items' names
-            ( { model | entries = entries }
-            , Effect.None
-            )
 
 
-itemsFromDb :
-    List Ports.Item
-    -> List ViewItem
-itemsFromDb items entries =
-    Debug.todo ""
-
-
-
--- let
---     entryMap = Dict.fromList
 ---- VIEW ----
 
 
@@ -86,25 +54,33 @@ view model =
             { shops =
                 [ View.ShoppingList.shopGenericHeading
                 , View.ShoppingList.itemList
-                    (List.map
-                        (\{ checked, name } ->
-                            View.ShoppingList.item
-                                { enabled = checked
-                                , content =
-                                    [ View.ShoppingList.itemAmount "10000000999999"
-                                    , Html.Styled.text " "
-                                    , Html.Styled.text name
-                                    ]
-                                }
-                        )
-                        model.items
-                    )
+                    [ View.ShoppingList.item
+                        { enabled = True
+                        , content =
+                            [ Html.Styled.text "Milch, "
+                            , View.ShoppingList.itemAmount "2"
+                            ]
+                        }
+                    , View.ShoppingList.item
+                        { enabled = True
+                        , content =
+                            [ View.ShoppingList.itemAmount "12"
+                            , Html.Styled.text " Eier"
+                            ]
+                        }
+                    , View.ShoppingList.item
+                        { enabled = True, content = [ Html.Styled.text "Zwiebeln" ] }
+                    , View.ShoppingList.item
+                        { enabled = False
+                        , content = [ Html.Styled.text "2 Joghurt" ]
+                        }
+                    ]
                 , View.ShoppingList.shopHeading "Dm"
                 , View.ShoppingList.itemList []
                 ]
             , actionSection =
-                { addItemInputValue = model.addItemInputValue
-                , onItemInput = OnAddItemInput
+                { addItemInputValue = ""
+                , onItemInput = \_ -> NoOp
                 , onItemAdd = NoOp
                 , onClearItems = NoOp
                 }
@@ -127,9 +103,5 @@ main =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.batch
-        -- TODO Instead of NoOp, handle errors
-        [ Ports.subscribeReceive Ports.codecItem NoOp ReceivedItemsUpdate
-        , Ports.subscribeReceive Ports.codecEntry NoOp ReceivedEntriesUpdate
-        ]
+subscriptions _ =
+    Sub.none
