@@ -24,7 +24,7 @@ const collections = {
 
 const sendCurrentList = async (collectionId) => {
   const currentList = await collections[collectionId].list();
-  app.ports.kintoReceive.send({collectionId, data: currentList.data});
+  app.ports.receive.send({collectionId, data: currentList.data});
 }
 
 function attachPorts(app) {
@@ -47,7 +47,7 @@ function attachPorts(app) {
     }
   }
 
-  app.ports.kintoSend.subscribe(async ({ command, argument }) => {
+  app.ports.send.subscribe(async ({ command, argument }) => {
     const executor = commands[command]
     if (!executor) {
       console.error("unknown command", command)

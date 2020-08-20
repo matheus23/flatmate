@@ -4,8 +4,8 @@ import Browser
 import Effect exposing (Effect)
 import Html
 import Html.Styled
-import Kinto
 import List.Extra as List
+import Ports
 import View.ShoppingList
 
 
@@ -14,7 +14,7 @@ import View.ShoppingList
 
 
 type alias Model =
-    { shoppingItems : List { title : String, id : Kinto.Id }
+    { shoppingItems : List { title : String, id : Ports.Id }
     , inputText : String
     }
 
@@ -24,7 +24,7 @@ init =
     ( { shoppingItems = []
       , inputText = ""
       }
-    , Effect.KintoSend Kinto.FetchList
+    , Effect.None
     )
 
 
@@ -34,10 +34,6 @@ init =
 
 type Msg
     = NoOp
-    | RemoveShoppingItem Kinto.Id
-    | ChangeNewShoppingItem String
-    | AddNewShoppingItem
-    | ReceivedShoppingListUpdate (List { title : String, id : Kinto.Id })
 
 
 update : Msg -> Model -> ( Model, Effect )
@@ -45,26 +41,6 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Effect.None )
-
-        RemoveShoppingItem id ->
-            ( model
-            , Effect.KintoSend (Kinto.DeleteItem id)
-            )
-
-        ChangeNewShoppingItem newName ->
-            ( { model | inputText = newName }
-            , Effect.None
-            )
-
-        AddNewShoppingItem ->
-            ( { model | inputText = "" }
-            , Effect.KintoSend (Kinto.Add { title = model.inputText })
-            )
-
-        ReceivedShoppingListUpdate newList ->
-            ( { model | shoppingItems = newList }
-            , Effect.None
-            )
 
 
 
@@ -93,4 +69,4 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Kinto.receive NoOp ReceivedShoppingListUpdate
+    Sub.none
