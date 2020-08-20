@@ -2,7 +2,7 @@
 
 ## Step 1: The Shopping List
 
-## UI
+### UI
 
 * [X] Design shopping list
 * [X] Transfer figma styles to tailwind config
@@ -11,18 +11,20 @@
   - [ ] Figure out how sorting shopping list items should work
 * [ ] Make shopping list view dynamic, using new data schema
 
-## UI Specification
+### UI Specification
 
 * [X] Setup testing with elm-platform-test
 * [X] Exchange commands for 'Effects'
 * [X] Also mock subscriptions (need to figure out how to do that first)
 * [ ] Add 'user intention' hooks to View.ShoppingList module for elm-program-test use
+  - [ ] Add Test.Html.Query-ies for useful sections to View.ShoppingList for use with Program.within in tests
+  - [ ] Add 'intention' hooks: Utilities like `addShoppingListItem : String -> ProgramTest`
+* [ ] Fully specify UI using tests
 * [ ] Mock KintoJs in Elm
   - [ ] Figure out how/whether to do that
     - It's possible via getOutgoingPortValues
-* [ ] Fully specify UI using tests
 
-## Backend integration
+### Backend integration
 
 * [X] Hardcode shopping list items in Elm app
 * [X] Add Kinto JS lib
