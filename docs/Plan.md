@@ -9,9 +9,9 @@
 * [X] Build static UI
 * [X] Think through data schemas
   - [X] Figure out how sorting shopping list items should work
-* [ ] Update Kinto.elm/Update elm code with new decoders
-* [ ] Update tests according to new elm code
+* [X] Update Kinto.elm/Update elm code with new decoders
 * [ ] Make shopping list view dynamic, using new data schema
+* [ ] Update tests according to new elm code
 
 ### UI Specification
 
