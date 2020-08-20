@@ -4,7 +4,7 @@
 ## "Items" What is currently visible in the Shopping List
 
 * entry: common shopping list entry uuid
-* added_by: user uuid
+* (added_by: user uuid)
 * uuid: uuid
 * checked: boolean
 
@@ -22,7 +22,8 @@
   - suffix: string, e.g. "liter"
   - index_in_name: optional positive int, e.g. 5
 * shop: optional shop uuid
-* entered: list time
+* last_entered: time
+* previously_entered: list time
 
 ### Action: Add an item that has never been entered before
 

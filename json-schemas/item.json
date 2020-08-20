@@ -1,0 +1,46 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "description": "What is currently visible in the Shopping List",
+    "examples": [
+        {
+            "entry": "bb76a8fb-8bf1-4081-aa76-64fd74211d24",
+            "id": "ab76a8fb-8bf1-4081-aa76-64fd74211d24",
+            "checked": false
+        }
+    ],
+    "required": [
+        "entry",
+        "id",
+        "checked"
+    ],
+    "title": "Shopping List Items",
+    "properties": {
+        "entry": {
+            "description": "The Shopping List Entry that represents this Item",
+            "examples": [
+                "bb76a8fb-8bf1-4081-aa76-64fd74211d24"
+            ],
+            "title": "Reference to Shopping List Entry",
+            "type": "string"
+        },
+        "id": {
+            "description": "Identifier",
+            "examples": [
+                "bb76a8fb-8bf1-4081-aa76-64fd74211d24"
+            ],
+            "title": "UUIDv4",
+            "type": "string"
+        },
+        "checked": {
+            "default": false,
+            "description": "Whether the Item is displayed as checked in the UI.",
+            "examples": [
+                true,
+                false
+            ],
+            "title": "checked",
+            "type": "boolean"
+        }
+    }
+}
