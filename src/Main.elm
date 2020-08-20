@@ -50,7 +50,42 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     Html.Styled.toUnstyled
-        View.ShoppingList.view
+        (View.ShoppingList.view
+            { shops =
+                [ View.ShoppingList.shopGenericHeading
+                , View.ShoppingList.itemList
+                    [ View.ShoppingList.item
+                        { enabled = True
+                        , content =
+                            [ Html.Styled.text "Milch, "
+                            , View.ShoppingList.itemAmount "2"
+                            ]
+                        }
+                    , View.ShoppingList.item
+                        { enabled = True
+                        , content =
+                            [ View.ShoppingList.itemAmount "12"
+                            , Html.Styled.text " Eier"
+                            ]
+                        }
+                    , View.ShoppingList.item
+                        { enabled = True, content = [ Html.Styled.text "Zwiebeln" ] }
+                    , View.ShoppingList.item
+                        { enabled = False
+                        , content = [ Html.Styled.text "2 Joghurt" ]
+                        }
+                    ]
+                , View.ShoppingList.shopHeading "Dm"
+                , View.ShoppingList.itemList []
+                ]
+            , actionSection =
+                { addItemInputValue = ""
+                , onItemInput = \_ -> NoOp
+                , onItemAdd = NoOp
+                , onClearItems = NoOp
+                }
+            }
+        )
 
 
 

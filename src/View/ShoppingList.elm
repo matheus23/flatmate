@@ -10,8 +10,19 @@ import Tailwind.Breakpoints exposing (..)
 import Tailwind.Utilities exposing (..)
 
 
-view : Html msg
-view =
+type alias Elements msg =
+    { shops : List (Html msg)
+    , actionSection :
+        { addItemInputValue : String
+        , onItemInput : String -> msg
+        , onItemAdd : msg
+        , onClearItems : msg
+        }
+    }
+
+
+view : Elements msg -> Html msg
+view elements =
     div
         [ css
             [ flex
@@ -33,8 +44,8 @@ view =
                 ]
             ]
         , navbar
-        , shopList
-        , actions
+        , shopList elements.shops
+        , actionSection elements.actionSection
         ]
 
 
@@ -85,18 +96,14 @@ logo =
 -- SHOP SECTIONS
 
 
-shopList : Html msg
-shopList =
+shopList : List (Html msg) -> Html msg
+shopList sections =
     div
         [ css
             [ p_5
             ]
         ]
-        [ shopGenericHeading
-        , entryList
-        , shopHeading "Dm"
-        , entryList
-        ]
+        sections
 
 
 shopGenericHeading : Html msg
@@ -155,38 +162,18 @@ shopHeading shop =
 
 
 
--- ENTRY LIST
+-- ITEM LIST
 
 
-entryList : Html msg
-entryList =
+itemList : List (Html msg) -> Html msg
+itemList items =
     div
         [ css [ space_y_4 ] ]
-        [ entry
-            { enabled = True
-            , content =
-                [ text "Milch, "
-                , entryAmount "2"
-                ]
-            }
-        , entry
-            { enabled = True
-            , content =
-                [ entryAmount "12"
-                , text " Eier"
-                ]
-            }
-        , entry
-            { enabled = True, content = [ text "Zwiebeln" ] }
-        , entry
-            { enabled = False
-            , content = [ text "2 Joghurt" ]
-            }
-        ]
+        items
 
 
-entry : { enabled : Bool, content : List (Html msg) } -> Html msg
-entry { enabled, content } =
+item : { enabled : Bool, content : List (Html msg) } -> Html msg
+item { enabled, content } =
     div
         [ css
             [ h_5
@@ -227,8 +214,8 @@ entry { enabled, content } =
         ]
 
 
-entryAmount : String -> Html msg
-entryAmount amount =
+itemAmount : String -> Html msg
+itemAmount amount =
     span
         [ css
             [ rounded
@@ -245,8 +232,14 @@ entryAmount amount =
 -- ACTIONS SECTION
 
 
-actions : Html msg
-actions =
+actionSection :
+    { addItemInputValue : String
+    , onItemInput : String -> msg
+    , onItemAdd : msg
+    , onClearItems : msg
+    }
+    -> Html msg
+actionSection info =
     div
         [ css
             [ mt_auto
@@ -255,13 +248,23 @@ actions =
             , space_y_2
             ]
         ]
-        [ entryInput
+        [ itemInput
+            { value = info.addItemInputValue
+            , onInput = info.onItemInput
+            , onSubmit = info.onItemAdd
+            }
         , deleteCheckedButton
+            { onClick = info.onClearItems }
         ]
 
 
-entryInput : Html msg
-entryInput =
+itemInput :
+    { onInput : String -> msg
+    , value : String
+    , onSubmit : msg
+    }
+    -> Html msg
+itemInput info =
     form
         [ css
             [ flex
@@ -287,6 +290,8 @@ entryInput =
                 , border_gray_200
                 , pseudoClassActive [ border_flatmate_300 ]
                 ]
+            , Events.onInput info.onInput
+            , value info.value
             ]
             []
         , input
@@ -312,8 +317,8 @@ entryInput =
         ]
 
 
-deleteCheckedButton : Html msg
-deleteCheckedButton =
+deleteCheckedButton : { onClick : msg } -> Html msg
+deleteCheckedButton events =
     button
         [ css
             [ rounded
@@ -325,6 +330,7 @@ deleteCheckedButton =
             , w_full
             , py_1
             ]
+        , Events.onClick events.onClick
         ]
         -- TODO Add Icon
         [ text "Abgehaktes Löschen" ]
