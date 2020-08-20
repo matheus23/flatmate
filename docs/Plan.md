@@ -7,8 +7,10 @@
 * [X] Design shopping list
 * [X] Transfer figma styles to tailwind config
 * [X] Build static UI
-* [ ] Think through data schemas
+* [X] Think through data schemas
   - [X] Figure out how sorting shopping list items should work
+* [ ] Update Kinto.elm/Update elm code with new decoders
+* [ ] Update tests according to new elm code
 * [ ] Make shopping list view dynamic, using new data schema
 
 ### UI Specification
