@@ -11,6 +11,10 @@
   - [X] Figure out how sorting shopping list items should work
 * [X] Update Kinto.elm/Update elm code with new decoders
 * [X] Make shopping list view dynamic, using new data schema
+* [ ] Update Schema
+  - [ ] rename entries to suggestions
+  - [ ] add attributes that entries have to items
+  - [ ] remove dependencies on entries from items
 * [ ] Use Http api for app, instead of ports
 * [ ] Think about moving kintojs into SW
 
