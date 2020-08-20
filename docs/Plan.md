@@ -8,7 +8,7 @@
 * [X] Transfer figma styles to tailwind config
 * [X] Build static UI
 * [ ] Think through data schemas
-  - [ ] Figure out how sorting shopping list items should work
+  - [X] Figure out how sorting shopping list items should work
 * [ ] Make shopping list view dynamic, using new data schema
 
 ### UI Specification
@@ -32,6 +32,7 @@
 * [X] Local Kinto ?
 * [ ] Hardcode Auth
 * [ ] Create buckets etc. in admin interface, hardcode bucket ids etc.
+  - [ ] Maybe: Script for initializing the correct schema at kinto
 * [ ] Ports to KintoJs
   - [X] First rudimentary port
   - [ ] Proper port structure
