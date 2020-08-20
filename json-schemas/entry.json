@@ -29,7 +29,9 @@
     "required": [
         "name",
         "shop",
-        "entered"
+        "last_entered",
+        "previously_entered",
+        "amount"
     ],
     "title": "Shopping List Entry",
     "properties": {

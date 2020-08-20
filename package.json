@@ -10,7 +10,8 @@
     "make": "elm make",
     "repl": "elm repl",
     "reactor": "elm reactor",
-    "test": "elm-test"
+    "test": "elm-test",
+    "test:kinto": "node tests/upload-schema-examples.mjs"
   },
   "devDependencies": {
     "@babel/cli": "7.8.4",
@@ -42,6 +43,7 @@
     "kinto": "^14.0.0",
     "mini-css-extract-plugin": "0.4.5",
     "minimist": "1.2.5",
+    "node-fetch": "^2.6.0",
     "object-assign": "4.1.1",
     "optimize-css-assets-webpack-plugin": "5.0.3",
     "postcss-cli": "^7.1.1",

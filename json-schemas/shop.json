@@ -6,7 +6,7 @@
     "examples": [
         {
             "name": "DM",
-            "uuid": "fa91ff13-2362-413a-9b5b-4e0669b79a00",
+            "id": "fa91ff13-2362-413a-9b5b-4e0669b79a00",
             "entry_order": [
                 "a15cf024-9cbe-4cfd-8221-a025b3f1d7d7",
                 "54caef47-e027-4b75-83db-73069bce9d63"
@@ -15,8 +15,9 @@
     ],
     "required": [
         "name",
-        "uuid",
-        "entry_order"
+        "id",
+        "entry_order",
+        "1597923253610"
     ],
     "properties": {
         "name": {
@@ -28,8 +29,8 @@
                 "DM"
             ]
         },
-        "uuid": {
-            "$id": "#/properties/uuid",
+        "id": {
+            "$id": "#/properties/id",
             "type": "string",
             "title": "identifier",
             "description": "UUID uniquely identifying a shop",
@@ -59,6 +60,18 @@
                     "54caef47-e027-4b75-83db-73069bce9d63"
                 ]
             }
+        },
+        "last_modified": {
+            "$id": "#/properties/last_modified",
+            "type": [
+                "integer",
+                "null"
+            ],
+            "title": "Last Modified",
+            "description": "Last time, the record was modified",
+            "examples": [
+                1597923253610
+            ]
         }
     }
 }

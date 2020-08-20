@@ -114,3 +114,14 @@ actual shopping list:
 * Milch
 * Butter
 * Eier
+
+
+## Kinto Bucket Setup
+
+UI Schema builder: https://rjsf-team.github.io/react-jsonschema-form/
+
+* preliminary, hardcoded bucket id: flatmate
+
+### Collections:
+
+* 'items' for json-schemas/items.json
