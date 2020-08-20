@@ -4,8 +4,8 @@
     "description": "What is currently visible in the Shopping List",
     "examples": [
         {
-            "entry": "bb76a8fb-8bf1-4081-aa76-64fd74211d24",
-            "id": "ab76a8fb-8bf1-4081-aa76-64fd74211d24",
+            "entry": "c260bc24-401c-4562-8acf-4fea396a5812",
+            "id": "a0b85d33-a57e-40a3-a5a3-f04d61809f97",
             "checked": false
         }
     ],
@@ -19,7 +19,7 @@
         "entry": {
             "description": "The Shopping List Entry that represents this Item",
             "examples": [
-                "bb76a8fb-8bf1-4081-aa76-64fd74211d24"
+                "c260bc24-401c-4562-8acf-4fea396a5812"
             ],
             "title": "Reference to Shopping List Entry",
             "type": "string"
@@ -27,7 +27,7 @@
         "id": {
             "description": "Identifier",
             "examples": [
-                "bb76a8fb-8bf1-4081-aa76-64fd74211d24"
+                "a0b85d33-a57e-40a3-a5a3-f04d61809f97"
             ],
             "title": "UUIDv4",
             "type": "string"

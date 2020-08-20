@@ -4,6 +4,7 @@
     "description": "What has ever been entered as a shopping list 'Item'",
     "examples": [
         {
+            "id": "c260bc24-401c-4562-8acf-4fea396a5812",
             "name": "Kauf  Milch",
             "amount": {
                 "count": 2,
@@ -11,7 +12,7 @@
                 "suffix": "liter",
                 "index_in_name": 5
             },
-            "shop": "9a24df80-63e5-4366-b857-66d0750dd862",
+            "shop": "fa91ff13-2362-413a-9b5b-4e0669b79a00",
             "last_entered": 1597916392435,
             "previously_entered": [
                 1597916332435,
@@ -19,9 +20,18 @@
             ]
         },
         {
+            "id": "83ce2cbf-4140-45c1-846e-14bad23f9478",
             "name": "nimm 2",
             "amount": null,
-            "shop": "9a24df80-63e5-4366-b857-66d0750dd862",
+            "shop": "c06fa41a-129b-4a90-927c-8c4d93239f67",
+            "last_entered": 1597916392435,
+            "previously_entered": []
+        },
+        {
+            "id": "83b9abad-2fda-49da-bc41-9da32c677ed4",
+            "name": "Zahnpasta",
+            "amount": null,
+            "shop": null,
             "last_entered": 1597916392435,
             "previously_entered": []
         }
@@ -45,6 +55,15 @@
             ],
             "title": "Shopping List Entry Name",
             "type": "string"
+        },
+        "id": {
+            "$id": "#/properties/id",
+            "type": "string",
+            "title": "identifier",
+            "description": "UUID uniquely identifying an 'Entry'",
+            "examples": [
+                "83b9abad-2fda-49da-bc41-9da32c677ed4"
+            ]
         },
         "amount": {
             "default": null,
@@ -120,10 +139,13 @@
         "shop": {
             "description": "Reference to the shop this 'Entry' is assigned to.",
             "examples": [
-                "9a24df80-63e5-4366-b857-66d0750dd862"
+                "fa91ff13-2362-413a-9b5b-4e0669b79a00"
             ],
             "title": "shop reference",
-            "type": "string"
+            "type": [
+                "string",
+                "null"
+            ]
         },
         "last_entered": {
             "description": "POSIX Timestamp of the last time this 'Entry' was added as an 'Item'.",
