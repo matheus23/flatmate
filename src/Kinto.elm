@@ -1,11 +1,12 @@
-port module Kinto exposing (Id, RecordCommand(..), codecCommand, codecReceive, keyedWith, receive, send)
+port module Kinto exposing (..)
 
 import Codec exposing (Codec)
 import Json.Encode as E
+import Time
 
 
 
--- TYPES
+-- COMMAND TYPES
 
 
 type alias Command record =
@@ -25,14 +26,57 @@ type alias Receive record =
     List record
 
 
-type Id
-    = Id String
-
-
 type CollectionId
     = CollectionItems
     | CollectionEntries
     | CollectionShops
+
+
+
+-- RECORD TYPES
+
+
+type alias Item =
+    { id : Id
+    , lastModified : Time.Posix
+    , entry : Id
+    , checked : Bool
+    }
+
+
+type alias Entry =
+    { id : Id
+    , lastModified : Time.Posix
+    , name : String
+    , amount : Maybe Amount
+    , shop : Id
+    , lastEntered : Time.Posix
+    , previouslyEntered : List Time.Posix
+    }
+
+
+type alias Amount =
+    { count : Int
+    , prefix : String
+    , suffix : String
+    , indexInName : Int
+    }
+
+
+type alias Shop =
+    { id : Id
+    , lastModified : Time.Posix
+    , name : String
+    , entryOrder : List Id
+    }
+
+
+
+-- OTHER TYPES
+
+
+type Id
+    = Id String
 
 
 
@@ -66,7 +110,7 @@ port kintoReceive : (E.Value -> msg) -> Sub msg
 
 
 
--- CODECS
+-- COMMAND CODECS
 
 
 codecCommand : Codec record -> Codec (Command record)
@@ -101,19 +145,6 @@ codecRecordCommand codecRecord =
         |> Codec.buildCustom
 
 
-codecRecordWithId : Codec { title : String, id : Id }
-codecRecordWithId =
-    Codec.object (\title id -> { title = title, id = id })
-        |> Codec.field "title" .title Codec.string
-        |> Codec.field "id" .id codecId
-        |> Codec.buildObject
-
-
-codecId : Codec Id
-codecId =
-    Codec.string |> Codec.map Id unwrap
-
-
 codecReceive : Codec record -> Codec (List record)
 codecReceive =
     Codec.list
@@ -140,12 +171,68 @@ codecCollectionId =
 
 
 
+-- RECORD CODECS
+
+
+codecItem : Codec Item
+codecItem =
+    Codec.object Item
+        |> Codec.field "id" .id codecId
+        |> Codec.field "last_modified" .lastModified codecTime
+        |> Codec.field "entry" .entry codecId
+        |> Codec.field "checked" .checked Codec.bool
+        |> Codec.buildObject
+
+
+codecEntry : Codec Entry
+codecEntry =
+    Codec.object Entry
+        |> Codec.field "id" .id codecId
+        |> Codec.field "last_modified" .lastModified codecTime
+        |> Codec.field "name" .name Codec.string
+        |> Codec.nullableField "amount" .amount codecAmount
+        |> Codec.field "shop" .shop codecId
+        |> Codec.field "last_entered" .lastEntered codecTime
+        |> Codec.field "previously_entered" .previouslyEntered (Codec.list codecTime)
+        |> Codec.buildObject
+
+
+codecShop : Codec Shop
+codecShop =
+    Codec.object Shop
+        |> Codec.field "id" .id codecId
+        |> Codec.field "last_modified" .lastModified codecTime
+        |> Codec.field "name" .name Codec.string
+        |> Codec.field "entry_order" .entryOrder (Codec.list codecId)
+        |> Codec.buildObject
+
+
+codecAmount : Codec Amount
+codecAmount =
+    Codec.object Amount
+        |> Codec.field "count" .count Codec.int
+        |> Codec.field "prefix" .prefix Codec.string
+        |> Codec.field "suffix" .suffix Codec.string
+        |> Codec.field "index_in_name" .indexInName Codec.int
+        |> Codec.buildObject
+
+
+
+-- OTHER CODECS
+
+
+codecId : Codec Id
+codecId =
+    Codec.string |> Codec.map Id (\(Id s) -> s)
+
+
+codecTime : Codec Time.Posix
+codecTime =
+    Codec.int |> Codec.map Time.millisToPosix Time.posixToMillis
+
+
+
 -- OTHER
-
-
-unwrap : Id -> String
-unwrap (Id id) =
-    id
 
 
 keyedWith : Id -> a -> ( String, a )
