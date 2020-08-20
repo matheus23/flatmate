@@ -1,4 +1,4 @@
-port module Kinto exposing (..)
+port module Ports exposing (..)
 
 import Codec exposing (Codec)
 import Json.Encode as E
@@ -83,14 +83,14 @@ type Id
 -- HIGHER LEVEL API
 
 
-send : Codec record -> Command record -> Cmd msg
-send codecRecord command =
-    Codec.encoder (codecCommand codecRecord) command |> kintoSend
+encodeSend : Codec record -> Command record -> E.Value
+encodeSend codecRecord command =
+    Codec.encoder (codecCommand codecRecord) command
 
 
-receive : Codec record -> msg -> (Receive record -> msg) -> Sub msg
-receive codecRecord onError produceMsg =
-    kintoReceive
+subscribeReceive : Codec record -> msg -> (Receive record -> msg) -> Sub msg
+subscribeReceive codecRecord onError produceMsg =
+    receive
         (\value ->
             Codec.decodeValue (codecReceive codecRecord) value
                 |> Result.toMaybe
@@ -103,10 +103,10 @@ receive codecRecord onError produceMsg =
 -- PORTS
 
 
-port kintoSend : E.Value -> Cmd msg
+port send : E.Value -> Cmd msg
 
 
-port kintoReceive : (E.Value -> msg) -> Sub msg
+port receive : (E.Value -> msg) -> Sub msg
 
 
 

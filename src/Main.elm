@@ -6,7 +6,6 @@ import Html
 import Html.Styled
 import Kinto
 import List.Extra as List
-import View
 import View.ShoppingList
 
 
@@ -79,26 +78,6 @@ view model =
 
 
 
--- (View.shoppingList
---     { items =
---         List.map
---             (\{ title, id } ->
---                 Kinto.keyedWith id
---                     (View.shoppingListItem
---                         { name = title
---                         , onClick = RemoveShoppingItem id
---                         }
---                     )
---             )
---             model.shoppingItems
---     , input =
---         View.shoppingListInput
---             { onSubmit = AddNewShoppingItem
---             , onInput = ChangeNewShoppingItem
---             , inputText = model.inputText
---             }
---     }
--- )
 ---- PROGRAM ----
 
 

@@ -1,11 +1,12 @@
 module Effect exposing (..)
 
-import Kinto
+import Json.Encode as E
+import Ports
 
 
 type Effect
     = None
-    | KintoSend Kinto.Command
+    | SendPort E.Value
 
 
 perform : Effect -> Cmd msg
@@ -14,5 +15,5 @@ perform effect =
         None ->
             Cmd.none
 
-        KintoSend command ->
-            Kinto.send command
+        SendPort value ->
+            Ports.send value
