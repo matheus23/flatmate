@@ -45,6 +45,7 @@ Routes
 * [ ] Figure out auth flow
 * [ ] Figure out flat creation flow
 * [ ] Figure out ... ???
+  - [ ] Figure out history/logs & undo
 * [ ] Designs for above
 * [ ] Implement routing
 * [ ] Implementation
