@@ -13,35 +13,37 @@ const app = Elm.Main.init({
 
 const kinto = new Kinto({
   remote: "http://localhost:8888/v1/",
-  bucket: "shopping-list-test",
+  bucket: "flatmate",
 });
 window.kinto = kinto;
+const collections = {
+  items: kinto.collection("items"),
+  entries: kinto.collection("entries"),
+  shops: kinto.collection("shops")
+};
 
-const shoppingList = kinto.collection("shopping-list");
-window.shoppingList = shoppingList;
-
-const sendCurrentList = async () => {
-  const currentList = await shoppingList.list();
-  app.ports.kintoReceive.send(currentList.data);
+const sendCurrentList = async (collectionId) => {
+  const currentList = await collections[collectionId].list();
+  app.ports.kintoReceive.send({collectionId, data: currentList.data});
 }
 
 function attachPorts(app) {
 
   const commands = {
-    add: async title => {
-      await shoppingList.create({ title: title, content: "empty!" });
-      await sendCurrentList()
+    add: async ({collectionId, data}) => {
+      await collections[collectionId].create(data);
+      await sendCurrentList(collectionId)
     },
-    update: async ({ item }) => {
-      await shoppingList.update(item);
-      await sendCurrentList()
+    update: async ({collectionId, data}) => {
+      await collections[collectionId].update(data);
+      await sendCurrentList(collectionId)
     },
-    delete: async id => {
-      await shoppingList.delete(id)
-      await sendCurrentList();
+    delete: async ({collectionId, id}) => {
+      await collections[collectionId].delete(id)
+      await sendCurrentList(collectionId);
     },
-    fetchList: async () => {
-      await sendCurrentList();
+    fetchList: async (collectionId) => {
+      await sendCurrentList(collectionId);
     }
   }
 

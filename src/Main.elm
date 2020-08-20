@@ -114,4 +114,4 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Kinto.receive ReceivedShoppingListUpdate
+    Kinto.receive NoOp ReceivedShoppingListUpdate
