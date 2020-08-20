@@ -10,7 +10,10 @@
 * [X] Think through data schemas
   - [X] Figure out how sorting shopping list items should work
 * [X] Update Kinto.elm/Update elm code with new decoders
-* [ ] Make shopping list view dynamic, using new data schema
+* [X] Make shopping list view dynamic, using new data schema
+* [ ] Use Http api for app, instead of ports
+* [ ] Think about moving kintojs into SW
+
 * [ ] Update tests according to new elm code
 
 ### UI Specification
@@ -25,21 +28,6 @@
 * [ ] Mock KintoJs in Elm
   - [ ] Figure out how/whether to do that
     - It's possible via getOutgoingPortValues
-
-### Backend integration
-
-* [X] Hardcode shopping list items in Elm app
-* [X] Add Kinto JS lib
-  - [X] Make sure TS defs work / TS works (VS Code checks might be enough)
-* [X] Local Kinto ?
-* [ ] Hardcode Auth
-* [ ] Create buckets etc. in admin interface, hardcode bucket ids etc.
-  - [ ] Maybe: Script for initializing the correct schema at kinto
-* [ ] Ports to KintoJs
-  - [X] First rudimentary port
-  - [ ] Proper port structure
-  - [ ] Send Json.Values through ports and validate records on the elm side (with some error handling)
-* [X] Dynamic (/synced) shopping list :)
 
 ## Step 2: An Actual App
 

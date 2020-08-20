@@ -8,6 +8,10 @@
 * uuid: uuid
 * checked: boolean
 
+### Action: Add an "Item" that already exists in a shopping list
+
+-> Should warn the user and add nothing
+
 
 ## "Entries" What has ever been entered as an "Item"
 

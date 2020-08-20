@@ -229,12 +229,3 @@ codecId =
 codecTime : Codec Time.Posix
 codecTime =
     Codec.int |> Codec.map Time.millisToPosix Time.posixToMillis
-
-
-
--- OTHER
-
-
-keyedWith : Id -> a -> ( String, a )
-keyedWith (Id id) view =
-    ( id, view )
