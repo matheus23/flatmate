@@ -59,8 +59,6 @@ async function updateSchema(collectionId, schema) {
         }),
         headers,
     });
-
-    return await result;
 }
 
 async function tryAddingExamplesFromSchemaFiles() {
