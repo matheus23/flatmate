@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
     "type": "object",
-    "description": "What has ever been entered as a shopping list 'Item'",
+    "description": "Curated history of 'Item's ever entered to be used as suggestions.",
     "examples": [
         {
             "id": "c260bc24-401c-4562-8acf-4fea396a5812",
@@ -122,8 +122,8 @@
                 "index_in_name": {
                     "$id": "#/properties/amount/properties/index_in_name",
                     "type": "integer",
-                    "title": "The index_in_name schema",
-                    "description": "An explanation about the purpose of this instance.",
+                    "title": "amount index in name",
+                    "description": "Insertion point of the amount in name.",
                     "default": 0,
                     "const": 5,
                     "examples": [

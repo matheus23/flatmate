@@ -10,7 +10,7 @@ const password = "Flatmate";
 const bucketId = "flatmate";
 const shopsId = "shops";
 const itemsId = "items";
-const entriesId = "entries";
+const suggestionsId = "suggestions";
 const endpoint = "http://localhost:8888/v1"; // kinto endpoint
 const headers = {
     "Accept": "application/json",
@@ -63,7 +63,7 @@ async function updateSchema(collectionId, schema) {
 
 async function tryAddingExamplesFromSchemaFiles() {
     const schemaShops = await loadSchemaFile("shop.json");
-    const schemaEntries = await loadSchemaFile("entry.json");
+    const schemaSuggestions = await loadSchemaFile("suggestion.json");
     const schemaItems = await loadSchemaFile("item.json");
 
     async function testExample(example, collectionId) {
@@ -83,8 +83,8 @@ async function tryAddingExamplesFromSchemaFiles() {
         await testExample(shopExample, shopsId);
     }
 
-    for await (const entryExample of schemaEntries.examples) {
-        await testExample(entryExample, entriesId);
+    for await (const entryExample of schemaSuggestions.examples) {
+        await testExample(entryExample, suggestionsId);
     }
 
     for await (const itemExample of schemaItems.examples) {
@@ -94,7 +94,7 @@ async function tryAddingExamplesFromSchemaFiles() {
 
 async function updateSchemasInCollections() {
     const schemaShops = await loadSchemaFile("shop.json");
-    const schemaEntries = await loadSchemaFile("entry.json");
+    const schemaSuggestions = await loadSchemaFile("suggestion.json");
     const schemaItems = await loadSchemaFile("item.json");
 
     async function assertOk(response) {
@@ -106,7 +106,7 @@ async function updateSchemasInCollections() {
 
     await assertOk(await updateSchema(shopsId, schemaShops));
     console.log("Updated shop schema.");
-    await assertOk(await updateSchema(entriesId, schemaEntries));
+    await assertOk(await updateSchema(suggestionsId, schemaSuggestions));
     console.log("Updated entry schema.");
     await assertOk(await updateSchema(itemsId, schemaItems));
     console.log("Updated item schema.");
