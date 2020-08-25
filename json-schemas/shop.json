@@ -21,8 +21,7 @@
     "required": [
         "name",
         "id",
-        "entry_order",
-        "1597923253610"
+        "entry_order"
     ],
     "properties": {
         "name": {
@@ -47,7 +46,7 @@
             "$id": "#/properties/entry_order",
             "type": "array",
             "title": "entry_order",
-            "description": "Partical order of entries, that have been purchased at this shop",
+            "description": "List representing an ordering for entries",
             "examples": [
                 [
                     "a15cf024-9cbe-4cfd-8221-a025b3f1d7d7",
