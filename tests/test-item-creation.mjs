@@ -29,9 +29,9 @@ function assert(cond, message) {
     }
 }
 
-async function loadSchemaFile(filename) {
+async function importJson(filename) {
     const file = await fs.readFile(
-        path.resolve(dirname, "..", "json-schemas", filename),
+        path.resolve(dirname, filename),
         { encoding: "utf-8" }
     );
     return JSON.parse(file);
@@ -62,9 +62,13 @@ async function updateSchema(collectionId, schema) {
 }
 
 async function tryAddingExamplesFromSchemaFiles() {
-    const schemaShops = await loadSchemaFile("shop.json");
-    const schemaSuggestions = await loadSchemaFile("suggestion.json");
-    const schemaItems = await loadSchemaFile("item.json");
+    const schemaShops = await importJson("../json-schemas/shop.json");
+    const schemaSuggestions = await importJson("../json-schemas/suggestion.json");
+    const schemaItems = await importJson("../json-schemas/item.json");
+
+    assert(schemaShops.examples.length > 0, "No examples in shop.json schema");
+    assert(schemaSuggestions.examples.length > 0, "No examples in suggestion.json schema");
+    assert(schemaItems.examples.length > 0, "No examples in item.json schema");
 
     async function testExample(example, collectionId) {
         const result = await upsert(collectionId, example);
@@ -90,12 +94,13 @@ async function tryAddingExamplesFromSchemaFiles() {
     for await (const itemExample of schemaItems.examples) {
         await testExample(itemExample, itemsId);
     }
+    console.log("All schema examples uploaded successfully.");
 }
 
 async function updateSchemasInCollections() {
-    const schemaShops = await loadSchemaFile("shop.json");
-    const schemaSuggestions = await loadSchemaFile("suggestion.json");
-    const schemaItems = await loadSchemaFile("item.json");
+    const schemaShops = await importJson("../json-schemas/shop.json");
+    const schemaSuggestions = await importJson("../json-schemas/suggestion.json");
+    const schemaItems = await importJson("../json-schemas/item.json");
 
     async function assertOk(response) {
         assert(
