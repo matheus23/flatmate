@@ -3,7 +3,6 @@
 
 ## "Items": What is currently visible in the Shopping List
 
-Common fields with "Suggestions":
 * name: string, e.g. "Kauf  Milch", "nimm 2"
 * amount: optional record
   - count: positive int, e.g. 2
@@ -11,10 +10,6 @@ Common fields with "Suggestions":
   - suffix: string, e.g. "liter"
   - index_in_name: optional positive int, e.g. 5
 * shop: optional shop uuid
-* last_entered: time
-* previously_entered: list time
-
-Unique fields to "Items":
 * checked: boolean
 * (added_by: user uuid)
 
