@@ -12,6 +12,7 @@
 * [X] Update Kinto.elm/Update elm code with new decoders
 * [X] Make shopping list view dynamic, using new data schema
 * [ ] Update Schema
+  - [X] add script that configures the schema at a kinto server
   - [ ] rename entries to suggestions
   - [ ] add attributes that entries have to items
   - [ ] remove dependencies on entries from items
