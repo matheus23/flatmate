@@ -25,6 +25,11 @@ type alias Amount =
     }
 
 
+type alias KintoRequest data =
+    { data : data
+    }
+
+
 
 -- OTHER TYPES
 
@@ -56,6 +61,13 @@ codecAmount =
         |> Codec.field "prefix" .prefix Codec.string
         |> Codec.field "suffix" .suffix Codec.string
         |> Codec.field "index_in_name" .indexInName Codec.int
+        |> Codec.buildObject
+
+
+codecKintoRequest : Codec r -> Codec (KintoRequest r)
+codecKintoRequest codecData =
+    Codec.object KintoRequest
+        |> Codec.field "data" .data codecData
         |> Codec.buildObject
 
 

@@ -6,7 +6,6 @@ import Data
 import Html
 import Html.Styled
 import Http
-import Json.Decode as Decode exposing (Decoder)
 import List.Extra as List
 import Task
 import View.ShoppingList
@@ -35,13 +34,15 @@ init =
         , resolver =
             Http.stringResolver
                 (Data.handleResponse
-                    (Decode.field "data"
-                        (Codec.decoder (Codec.list Data.codecItem))
+                    (Codec.decoder
+                        (Data.codecKintoRequest
+                            (Codec.list Data.codecItem)
+                        )
                     )
                 )
         , timeout = Just 5000
         }
-        |> Task.attempt FetchedShoppingItems
+        |> Task.attempt (Result.map .data >> FetchedShoppingItems)
     )
 
 
