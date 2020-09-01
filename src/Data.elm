@@ -1,6 +1,8 @@
 module Data exposing (..)
 
 import Codec exposing (Codec)
+import Http
+import Json.Decode as D
 import Json.Encode as E
 import Time
 
@@ -69,3 +71,27 @@ codecId =
 codecTime : Codec Time.Posix
 codecTime =
     Codec.int |> Codec.map Time.millisToPosix Time.posixToMillis
+
+
+
+-- USEFUL STUFF
+
+
+handleResponse : D.Decoder a -> Http.Response String -> Result Http.Error a
+handleResponse decoder response =
+    case response of
+        Http.BadUrl_ url ->
+            Err (Http.BadUrl url)
+
+        Http.Timeout_ ->
+            Err Http.Timeout
+
+        Http.NetworkError_ ->
+            Err Http.NetworkError
+
+        Http.BadStatus_ { statusCode } _ ->
+            Err (Http.BadStatus statusCode)
+
+        Http.GoodStatus_ _ body ->
+            D.decodeString decoder body
+                |> Result.mapError (D.errorToString >> Http.BadBody)

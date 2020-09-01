@@ -6,8 +6,9 @@ import Data
 import Html
 import Html.Styled
 import Http
-import Json.Decode
+import Json.Decode as Decode exposing (Decoder)
 import List.Extra as List
+import Task
 import View.ShoppingList
 
 
@@ -26,15 +27,21 @@ init =
     ( { shoppingItems = []
       , inputText = ""
       }
-    , Http.get
+    , Http.task
         { url = "http://localhost:8888/v1/buckets/flatmate/collections/items/records"
-        , expect =
-            Http.expectJson
-                FetchedShoppingItems
-                (Json.Decode.field "data"
-                    (Codec.decoder (Codec.list Data.codecItem))
+        , method = "GET"
+        , headers = []
+        , body = Http.emptyBody
+        , resolver =
+            Http.stringResolver
+                (Data.handleResponse
+                    (Decode.field "data"
+                        (Codec.decoder (Codec.list Data.codecItem))
+                    )
                 )
+        , timeout = Just 5000
         }
+        |> Task.attempt FetchedShoppingItems
     )
 
 
