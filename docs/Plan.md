@@ -16,7 +16,10 @@
   - [X] rename entries to suggestions
   - [X] add attributes that entries have to items
   - [X] remove dependencies on entries from items
-* [X] Use Http api for app, instead of ports
+* [ ] Use Http api for app, instead of ports
+  - [X] fetch items
+  - [X] create items
+  - [ ] andThen-fetch shops
 * [ ] Think about moving kintojs into SW
   - [ ] Need a route parser & builder
     - Use elm/url? Something like elm-codec with elm/url?
