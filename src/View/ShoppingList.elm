@@ -172,8 +172,8 @@ itemList items =
         items
 
 
-item : { enabled : Bool, content : List (Html msg) } -> Html msg
-item { enabled, content } =
+item : { checked : Bool, content : List (Html msg) } -> Html msg
+item { checked, content } =
     div
         [ css
             [ h_5
@@ -181,11 +181,11 @@ item { enabled, content } =
             , relative
 
             --
-            , if enabled then
-                bg_gray_200
+            , if checked then
+                Css.batch []
 
               else
-                Css.batch []
+                bg_gray_200
             ]
         ]
         [ span
@@ -200,14 +200,14 @@ item { enabled, content } =
                 , Css.bottom (Css.px -4)
 
                 --
-                , if enabled then
-                    text_gray_900
-
-                  else
+                , if checked then
                     Css.batch
                         [ text_gray_500
                         , line_through
                         ]
+
+                  else
+                    text_gray_900
                 ]
             ]
             content

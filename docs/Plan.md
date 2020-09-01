@@ -18,6 +18,9 @@
   - [X] remove dependencies on entries from items
 * [ ] Use Http api for app, instead of ports
 * [ ] Think about moving kintojs into SW
+  - [ ] Need a route parser & builder
+    - Use elm/url? Something like elm-codec with elm/url?
+    - Use Platform.worker? Include elm in serviceworker.js?
 
 * [ ] Update tests according to new elm code
 

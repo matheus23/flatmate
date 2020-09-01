@@ -1,11 +1,14 @@
 module Main exposing (..)
 
 import Browser
+import Codec
+import Data
 import Effect exposing (Effect)
 import Html
 import Html.Styled
+import Http
+import Json.Decode
 import List.Extra as List
-import Ports
 import View.ShoppingList
 
 
@@ -14,17 +17,27 @@ import View.ShoppingList
 
 
 type alias Model =
-    { shoppingItems : List { title : String, id : Ports.Id }
+    { shoppingItems : List Data.Item
     , inputText : String
     }
 
 
-init : ( Model, Effect )
+init : ( Model, Effect Msg )
 init =
     ( { shoppingItems = []
       , inputText = ""
       }
-    , Effect.None
+    , Effect.Http
+        { url = "http://localhost:8888/v1/buckets/flatmate/collections/items/records"
+        , method = "GET"
+        , body = Effect.EmptyBody
+        , expect =
+            Effect.expectJson
+                FetchedShoppingItems
+                (Json.Decode.field "data"
+                    (Codec.decoder (Codec.list Data.codecItem))
+                )
+        }
     )
 
 
@@ -34,13 +47,24 @@ init =
 
 type Msg
     = NoOp
+    | FetchedShoppingItems (Result Http.Error (List Data.Item))
 
 
-update : Msg -> Model -> ( Model, Effect )
+update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         NoOp ->
             ( model, Effect.None )
+
+        FetchedShoppingItems result ->
+            ( case result of
+                Err _ ->
+                    model
+
+                Ok items ->
+                    { model | shoppingItems = items }
+            , Effect.None
+            )
 
 
 
@@ -54,27 +78,15 @@ view model =
             { shops =
                 [ View.ShoppingList.shopGenericHeading
                 , View.ShoppingList.itemList
-                    [ View.ShoppingList.item
-                        { enabled = True
-                        , content =
-                            [ Html.Styled.text "Milch, "
-                            , View.ShoppingList.itemAmount "2"
-                            ]
-                        }
-                    , View.ShoppingList.item
-                        { enabled = True
-                        , content =
-                            [ View.ShoppingList.itemAmount "12"
-                            , Html.Styled.text " Eier"
-                            ]
-                        }
-                    , View.ShoppingList.item
-                        { enabled = True, content = [ Html.Styled.text "Zwiebeln" ] }
-                    , View.ShoppingList.item
-                        { enabled = False
-                        , content = [ Html.Styled.text "2 Joghurt" ]
-                        }
-                    ]
+                    (model.shoppingItems
+                        |> List.map
+                            (\item ->
+                                View.ShoppingList.item
+                                    { checked = item.checked
+                                    , content = [ Html.Styled.text item.name ]
+                                    }
+                            )
+                    )
                 , View.ShoppingList.shopHeading "Dm"
                 , View.ShoppingList.itemList []
                 ]

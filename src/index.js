@@ -24,21 +24,21 @@ const collections = {
 
 const sendCurrentList = async (collectionId) => {
   const currentList = await collections[collectionId].list();
-  app.ports.receive.send({collectionId, data: currentList.data});
+  app.ports.receive.send({ collectionId, data: currentList.data });
 }
 
 function attachPorts(app) {
 
   const commands = {
-    add: async ({collectionId, data}) => {
+    add: async ({ collectionId, data }) => {
       await collections[collectionId].create(data);
       await sendCurrentList(collectionId)
     },
-    update: async ({collectionId, data}) => {
+    update: async ({ collectionId, data }) => {
       await collections[collectionId].update(data);
       await sendCurrentList(collectionId)
     },
-    delete: async ({collectionId, id}) => {
+    delete: async ({ collectionId, id }) => {
       await collections[collectionId].delete(id)
       await sendCurrentList(collectionId);
     },
@@ -77,7 +77,7 @@ async function syncLoop() {
 
 
 attachPorts(app)
-syncLoop();
+// syncLoop();
 
 
 // If you want your app to work offline and load faster, you can change
