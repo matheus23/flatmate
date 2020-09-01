@@ -3,7 +3,6 @@ module Main exposing (..)
 import Browser
 import Codec
 import Data
-import Effect exposing (Effect)
 import Html
 import Html.Styled
 import Http
@@ -22,17 +21,15 @@ type alias Model =
     }
 
 
-init : ( Model, Effect Msg )
+init : ( Model, Cmd Msg )
 init =
     ( { shoppingItems = []
       , inputText = ""
       }
-    , Effect.Http
+    , Http.get
         { url = "http://localhost:8888/v1/buckets/flatmate/collections/items/records"
-        , method = "GET"
-        , body = Effect.EmptyBody
         , expect =
-            Effect.expectJson
+            Http.expectJson
                 FetchedShoppingItems
                 (Json.Decode.field "data"
                     (Codec.decoder (Codec.list Data.codecItem))
@@ -50,11 +47,11 @@ type Msg
     | FetchedShoppingItems (Result Http.Error (List Data.Item))
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NoOp ->
-            ( model, Effect.None )
+            ( model, Cmd.none )
 
         FetchedShoppingItems result ->
             ( case result of
@@ -63,7 +60,7 @@ update msg model =
 
                 Ok items ->
                     { model | shoppingItems = items }
-            , Effect.None
+            , Cmd.none
             )
 
 
@@ -108,8 +105,8 @@ main : Program () Model Msg
 main =
     Browser.element
         { view = view
-        , init = \_ -> init |> Tuple.mapSecond Effect.perform
-        , update = \msg model -> update msg model |> Tuple.mapSecond Effect.perform
+        , init = \_ -> init
+        , update = \msg model -> update msg model
         , subscriptions = subscriptions
         }
 
