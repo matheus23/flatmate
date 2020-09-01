@@ -7,7 +7,8 @@ import Html
 import Html.Styled
 import Http
 import List.Extra as List
-import Task
+import Task exposing (Task)
+import Time
 import View.ShoppingList
 
 
@@ -26,7 +27,14 @@ init =
     ( { shoppingItems = []
       , inputText = ""
       }
-    , Http.task
+    , fetchItems
+        |> Task.attempt FetchedShoppingItems
+    )
+
+
+fetchItems : Task Http.Error (List Data.Item)
+fetchItems =
+    Http.task
         { url = "http://localhost:8888/v1/buckets/flatmate/collections/items/records"
         , method = "GET"
         , headers = []
@@ -42,8 +50,7 @@ init =
                 )
         , timeout = Just 5000
         }
-        |> Task.attempt (Result.map .data >> FetchedShoppingItems)
-    )
+        |> Task.map .data
 
 
 
@@ -53,6 +60,8 @@ init =
 type Msg
     = NoOp
     | FetchedShoppingItems (Result Http.Error (List Data.Item))
+    | AddShoppingItem
+    | OnItemInput String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -69,6 +78,43 @@ update msg model =
                 Ok items ->
                     { model | shoppingItems = items }
             , Cmd.none
+            )
+
+        OnItemInput itemText ->
+            ( { model | inputText = itemText }, Cmd.none )
+
+        AddShoppingItem ->
+            let
+                id =
+                    "12334"
+            in
+            ( model
+            , Time.now
+                |> Task.andThen
+                    (\now ->
+                        Http.task
+                            { url = "http://localhost:8888/v1/buckets/flatmate/collections/items/records/" ++ id
+                            , method = "PUT"
+                            , headers = []
+                            , body =
+                                Http.jsonBody
+                                    (Codec.encodeToValue (Data.codecKintoRequest Data.codecItem)
+                                        { data =
+                                            { id = Data.Id id -- TODO Generate UUIDv4
+                                            , lastModified = now
+                                            , name = model.inputText
+                                            , amount = Nothing
+                                            , shop = Nothing
+                                            , checked = False
+                                            }
+                                        }
+                                    )
+                            , resolver = Http.stringResolver (\_ -> Ok ())
+                            , timeout = Just 5000
+                            }
+                            |> Task.andThen (\_ -> fetchItems)
+                    )
+                |> Task.attempt FetchedShoppingItems
             )
 
 
@@ -96,9 +142,9 @@ view model =
                 , View.ShoppingList.itemList []
                 ]
             , actionSection =
-                { addItemInputValue = ""
-                , onItemInput = \_ -> NoOp
-                , onItemAdd = NoOp
+                { addItemInputValue = model.inputText
+                , onItemInput = OnItemInput
+                , onItemAdd = AddShoppingItem
                 , onClearItems = NoOp
                 }
             }

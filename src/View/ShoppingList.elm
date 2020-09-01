@@ -271,6 +271,7 @@ itemInput info =
             , flex_row
             , space_x_2
             ]
+        , Events.onSubmit info.onSubmit
         ]
         [ input
             [ type_ "text"

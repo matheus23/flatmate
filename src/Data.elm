@@ -12,7 +12,7 @@ type alias Item =
     , lastModified : Time.Posix
     , name : String
     , amount : Maybe Amount
-    , shop : Id
+    , shop : Maybe Id
     , checked : Bool
     }
 
@@ -49,7 +49,7 @@ codecItem =
         |> Codec.field "last_modified" .lastModified codecTime
         |> Codec.field "name" .name Codec.string
         |> Codec.nullableField "amount" .amount codecAmount
-        |> Codec.field "shop" .shop codecId
+        |> Codec.nullableField "shop" .shop codecId
         |> Codec.field "checked" .checked Codec.bool
         |> Codec.buildObject
 
