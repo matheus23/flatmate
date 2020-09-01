@@ -5,6 +5,7 @@ import Http
 import Json.Decode as D
 import Json.Encode as E
 import Time
+import UUID exposing (UUID)
 
 
 type alias Item =
@@ -107,3 +108,8 @@ handleResponse decoder response =
         Http.GoodStatus_ _ body ->
             D.decodeString decoder body
                 |> Result.mapError (D.errorToString >> Http.BadBody)
+
+
+fromUUID : UUID -> Id
+fromUUID uuid =
+    Id (UUID.toString uuid)

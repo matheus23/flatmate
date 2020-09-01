@@ -7,8 +7,10 @@ import Html
 import Html.Styled
 import Http
 import List.Extra as List
+import Random
 import Task exposing (Task)
 import Time
+import UUID exposing (UUID)
 import View.ShoppingList
 
 
@@ -19,13 +21,24 @@ import View.ShoppingList
 type alias Model =
     { shoppingItems : List Data.Item
     , inputText : String
+    , uuidSeeds : UUID.Seeds
     }
 
 
-init : ( Model, Cmd Msg )
-init =
+type alias Flags =
+    { randomness : { r1 : Int, r2 : Int, r3 : Int, r4 : Int } }
+
+
+init : Flags -> ( Model, Cmd Msg )
+init { randomness } =
     ( { shoppingItems = []
       , inputText = ""
+      , uuidSeeds =
+            { seed1 = Random.initialSeed randomness.r1
+            , seed2 = Random.initialSeed randomness.r2
+            , seed3 = Random.initialSeed randomness.r3
+            , seed4 = Random.initialSeed randomness.r4
+            }
       }
     , fetchItems
         |> Task.attempt FetchedShoppingItems
@@ -85,22 +98,22 @@ update msg model =
 
         AddShoppingItem ->
             let
-                id =
-                    "12334"
+                ( uuid, seeds ) =
+                    UUID.step model.uuidSeeds
             in
-            ( model
+            ( { model | uuidSeeds = seeds, inputText = "" }
             , Time.now
                 |> Task.andThen
                     (\now ->
                         Http.task
-                            { url = "http://localhost:8888/v1/buckets/flatmate/collections/items/records/" ++ id
+                            { url = "http://localhost:8888/v1/buckets/flatmate/collections/items/records/" ++ UUID.toString uuid
                             , method = "PUT"
                             , headers = []
                             , body =
                                 Http.jsonBody
                                     (Codec.encodeToValue (Data.codecKintoRequest Data.codecItem)
                                         { data =
-                                            { id = Data.Id id -- TODO Generate UUIDv4
+                                            { id = Data.fromUUID uuid
                                             , lastModified = now
                                             , name = model.inputText
                                             , amount = Nothing
@@ -155,11 +168,11 @@ view model =
 ---- PROGRAM ----
 
 
-main : Program () Model Msg
+main : Program Flags Model Msg
 main =
     Browser.element
         { view = view
-        , init = \_ -> init
+        , init = init
         , update = \msg model -> update msg model
         , subscriptions = subscriptions
         }
