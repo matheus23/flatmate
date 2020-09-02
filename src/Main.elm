@@ -6,11 +6,13 @@ import Data
 import Html
 import Html.Styled
 import Http
+import Kinto.Routes
 import List.Extra as List
 import Random
 import Task exposing (Task)
 import Time
 import UUID exposing (UUID)
+import Url.Builder as Url
 import View.ShoppingList
 
 
@@ -48,7 +50,11 @@ init { randomness } =
 fetchItems : Task Http.Error (List Data.Item)
 fetchItems =
     Http.task
-        { url = "http://localhost:8888/v1/buckets/flatmate/collections/items/records"
+        { url =
+            Kinto.Routes.toUrl
+                (Url.crossOrigin "http://localhost:8888/")
+                (Kinto.Routes.records { bucketId = "flatmate", collectionId = "items" })
+                []
         , method = "GET"
         , headers = []
         , body = Http.emptyBody

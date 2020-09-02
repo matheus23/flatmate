@@ -24,6 +24,7 @@ type CollectionsRoutes
     | Records String
 
 
+kintoRoutes : Parser (KintoRoutes -> a) a
 kintoRoutes =
     s "v1"
         </> oneOf
@@ -37,81 +38,7 @@ kintoRoutes =
                 ]
 
 
-bucketsRoutes =
-    oneOf
-        [ s "groups"
-            </> oneOf
-                    [ map GroupsAll top
-                    ]
-        , s "collections"
-            </> oneOf
-                    [ map Collections (string </> collections.routes)
-                    , map CollectionsWhole string
-                    , map CollectionsAll top
-                    ]
-        ]
-
-
-collections =
-    p "records"
-        { routes =
-            oneOf
-                [ map Records string
-                , map RecordsAll top
-                ]
-        , path =
-            \route ->
-                case route of
-                    Records id ->
-                        [ id ]
-
-                    RecordsAll ->
-                        []
-        }
-
-
-addCase constructor sub { cases, paths } =
-    { cases = map constructor sub.routes :: cases
-    , paths = \chooser -> chooser sub.path
-    }
-
-
-type alias Routes a b =
-    { path : b -> List String
-    , routes : Parser a b
-    }
-
-
-type TestRoutes
-    = Test String String
-
-
-testRoutes =
-    { routes =
-        string </> s "two" </> string
-    , path =
-        \one two ->
-            [ one, "two", two ]
-    }
-
-
-
--- p : String -> Routes a b -> Routes a b
-
-
-p name { routes, path } =
-    { routes = s name </> routes
-    , path = \route -> name :: path route
-    }
-
-
-end : a -> Routes (a -> b) b
-end a =
-    { routes = map a top
-    , path = \_ -> []
-    }
-
-
+kintoPath : KintoRoutes -> List String
 kintoPath route =
     "v1"
         :: (case route of
@@ -129,6 +56,23 @@ kintoPath route =
            )
 
 
+bucketsRoutes : Parser (BucketsRoutes -> a) a
+bucketsRoutes =
+    oneOf
+        [ s "groups"
+            </> oneOf
+                    [ map GroupsAll top
+                    ]
+        , s "collections"
+            </> oneOf
+                    [ map Collections (string </> collectionsRoutes)
+                    , map CollectionsWhole string
+                    , map CollectionsAll top
+                    ]
+        ]
+
+
+bucketsPath : BucketsRoutes -> List String
 bucketsPath route =
     case route of
         GroupsAll ->
@@ -141,43 +85,25 @@ bucketsPath route =
             [ "collections", id ]
 
         Collections id collectionsRoute ->
-            [ "collections", id ] ++ collections.path collectionsRoute
+            "collections" :: id :: collectionsPath collectionsRoute
 
 
-roundTrip route =
-    Url.fromString (Url.crossOrigin "http://localhost:8888" (kintoPath route) [])
-        |> Maybe.andThen (parse kintoRoutes)
+collectionsRoutes : Parser (CollectionsRoutes -> a) a
+collectionsRoutes =
+    s "records"
+        </> oneOf
+                [ map Records string
+                , map RecordsAll top
+                ]
 
 
-exampleUrl path =
-    { protocol = Url.Http
-    , host = "localhost"
-    , port_ = Just 8888
-    , path = path
-    , query = Nothing
-    , fragment = Nothing
-    }
+collectionsPath : CollectionsRoutes -> List String
+collectionsPath route =
+    "records"
+        :: (case route of
+                Records id ->
+                    [ id ]
 
-
-exampleRoutes =
-    [ Top
-    , BucketsAll
-    , BucketsWhole "flatmate"
-    , Buckets "flatmate" GroupsAll
-    , Buckets "flatmate" CollectionsAll
-    , Buckets "flatmate" (CollectionsWhole "items")
-    , Buckets "flatmate" (Collections "items" RecordsAll)
-    , Buckets "flatmate" (Collections "items" (Records "1234"))
-    ]
-
-
-print ls =
-    let
-        _ =
-            List.map
-                (\x ->
-                    Debug.log "" x
-                )
-                (List.reverse ls)
-    in
-    ()
+                RecordsAll ->
+                    []
+           )
