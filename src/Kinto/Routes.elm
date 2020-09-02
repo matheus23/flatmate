@@ -5,26 +5,39 @@ import Url.Builder as Url
 import Url.Parser exposing (..)
 
 
-type KintoRoutes
+
+-- UTILITIES
+
+
+toUrl : (List String -> a) -> Kinto -> a
+toUrl urlKind route =
+    urlKind (kintoPath route)
+
+
+
+-- KINTO
+
+
+type Kinto
     = Top
     | BucketsAll
     | BucketsWhole String
-    | Buckets String BucketsRoutes
+    | Buckets String Buckets
 
 
-type BucketsRoutes
+type Buckets
     = GroupsAll
     | CollectionsAll
     | CollectionsWhole String
-    | Collections String CollectionsRoutes
+    | Collections String Collections
 
 
-type CollectionsRoutes
+type Collections
     = RecordsAll
     | Records String
 
 
-kintoRoutes : Parser (KintoRoutes -> a) a
+kintoRoutes : Parser (Kinto -> a) a
 kintoRoutes =
     s "v1"
         </> oneOf
@@ -38,7 +51,7 @@ kintoRoutes =
                 ]
 
 
-kintoPath : KintoRoutes -> List String
+kintoPath : Kinto -> List String
 kintoPath route =
     "v1"
         :: (case route of
@@ -56,7 +69,7 @@ kintoPath route =
            )
 
 
-bucketsRoutes : Parser (BucketsRoutes -> a) a
+bucketsRoutes : Parser (Buckets -> a) a
 bucketsRoutes =
     oneOf
         [ s "groups"
@@ -72,7 +85,7 @@ bucketsRoutes =
         ]
 
 
-bucketsPath : BucketsRoutes -> List String
+bucketsPath : Buckets -> List String
 bucketsPath route =
     case route of
         GroupsAll ->
@@ -88,7 +101,7 @@ bucketsPath route =
             "collections" :: id :: collectionsPath collectionsRoute
 
 
-collectionsRoutes : Parser (CollectionsRoutes -> a) a
+collectionsRoutes : Parser (Collections -> a) a
 collectionsRoutes =
     s "records"
         </> oneOf
@@ -97,7 +110,7 @@ collectionsRoutes =
                 ]
 
 
-collectionsPath : CollectionsRoutes -> List String
+collectionsPath : Collections -> List String
 collectionsPath route =
     "records"
         :: (case route of

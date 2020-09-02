@@ -6,7 +6,7 @@ import Data
 import Html
 import Html.Styled
 import Http
-import Kinto.Routes
+import Kinto.Routes as Routes
 import List.Extra as List
 import Random
 import Task exposing (Task)
@@ -51,9 +51,9 @@ fetchItems : Task Http.Error (List Data.Item)
 fetchItems =
     Http.task
         { url =
-            Kinto.Routes.toUrl
-                (Url.crossOrigin "http://localhost:8888/")
-                (Kinto.Routes.records { bucketId = "flatmate", collectionId = "items" })
+            Routes.toUrl
+                (Url.crossOrigin "http://localhost:8888")
+                (Routes.Buckets "flatmate" (Routes.Collections "items" Routes.RecordsAll))
                 []
         , method = "GET"
         , headers = []
