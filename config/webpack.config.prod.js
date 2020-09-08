@@ -118,12 +118,12 @@ module.exports = {
           parser: safePostCssParser,
           map: shouldUseSourceMap
             ? {
-                // This forces the sourcemap to be output into a separate file
-                inline: false,
-                // This appends the sourceMappingURL to the end of the css file,
-                // helping the browser find the sourcemap
-                annotation: true,
-              }
+              // This forces the sourcemap to be output into a separate file
+              inline: false,
+              // This appends the sourceMappingURL to the end of the css file,
+              // helping the browser find the sourcemap
+              annotation: true,
+            }
             : false,
         },
       }),
@@ -345,12 +345,9 @@ module.exports = {
     }),
     // Copies the public folder to the build folder
     new CopyPlugin([{ from: './public/', to: './' }]),
-    // Generate a service worker script that will precache, and keep up to date,
-    // the HTML & assets that are part of the Webpack build.
-    new workboxPlugin.GenerateSW({
-      swDest: './service-worker.js',
-      skipWaiting: true,
-      clientsClaim: true,
+    new workboxPlugin.InjectManifest({
+      swSrc: './src/sw.js',
+      swDest: 'sw.js',
     }),
   ],
   // Some libraries import Node modules but don't use them in the browser.

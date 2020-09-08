@@ -6,6 +6,7 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
+const workboxPlugin = require('workbox-webpack-plugin');
 const getClientEnvironment = require('./env');
 const paths = require('../config/paths');
 
@@ -270,6 +271,10 @@ module.exports = {
     // a plugin that prints an error when you attempt to do this.
     // See https://github.com/facebook/create-react-app/issues/240
     new CaseSensitivePathsPlugin(),
+    new workboxPlugin.InjectManifest({
+      swSrc: './src/sw.js',
+      swDest: 'sw.js',
+    }),
   ],
 
   // Some libraries import Node modules but don't use them in the browser.
