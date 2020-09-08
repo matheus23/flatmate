@@ -345,6 +345,7 @@ module.exports = {
     }),
     // Copies the public folder to the build folder
     new CopyPlugin([{ from: './public/', to: './' }]),
+    // docs: https://developers.google.com/web/tools/workbox/reference-docs/latest/module-workbox-webpack-plugin.InjectManifest#InjectManifest
     new workboxPlugin.InjectManifest({
       swSrc: './src/sw.js',
       swDest: 'sw.js',

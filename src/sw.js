@@ -13,8 +13,10 @@ precacheAndRoute(self.__WB_MANIFEST);
 // Anything that's not precached will fall through, since we didn't 'registerRoute' anything.
 // Useful resource: https://developers.google.com/web/tools/workbox/modules/workbox-routing
 
+const kintoEndpoint = "http://localhost:8888/v1";
+
 const kinto = new Kinto({
-    remote: "https://localhost:8888/v1",
+    remote: kintoEndpoint,
     bucket: "flatmate",
 });
 
@@ -28,3 +30,14 @@ elmSW.ports.log.subscribe(async message => {
         client.postMessage({ type: "log", content: message });
     });
 });
+
+self.addEventListener('fetch', event => {
+    if (event.request.url.startsWith(kintoEndpoint)) {
+        event.respondWith(async () => {
+            return fetch(event.request);
+        });
+    }
+    // request.headers.get(key)
+});
+
+self.skipWaiting();

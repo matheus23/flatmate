@@ -18,7 +18,7 @@ type Msg
 main : Platform.Program Flags Model Msg
 main =
     Platform.worker
-        { init = \() -> ( {}, log "Elm ServiceWorker initialized" )
+        { init = \() -> ( {}, Cmd.none )
         , update = \NoOp model -> ( model, Cmd.none )
         , subscriptions = \_ -> Sub.none
         }

@@ -271,6 +271,7 @@ module.exports = {
     // a plugin that prints an error when you attempt to do this.
     // See https://github.com/facebook/create-react-app/issues/240
     new CaseSensitivePathsPlugin(),
+    // docs: https://developers.google.com/web/tools/workbox/reference-docs/latest/module-workbox-webpack-plugin.InjectManifest#InjectManifest
     new workboxPlugin.InjectManifest({
       swSrc: './src/sw.js',
       swDest: 'sw.js',
