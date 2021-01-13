@@ -35,14 +35,32 @@ globalStyles =
 view : Html msg
 view =
     desktopScaffolding
-        -- [ -- loadingScreen { message = "Authenticating..." }
-        -- -- signinScreen
-        -- ]
-        shoppingList
+        (appShell
+            [ shoppingList
+                [ shoppingListItem { checked = True, content = [ text "Milk" ] }
+                , shoppingListItem { checked = False, content = [ text "Butter" ] }
+                , shoppingListItem { checked = False, content = [ text "Eggs" ] }
+                , shoppingListItem { checked = True, content = [ text "Screwdriver" ] }
+                , shoppingListItem { checked = False, content = [ text "Avocado" ] }
+                , shoppingListItem { checked = True, content = [ text "Cherries" ] }
+                ]
+            , shoppingListActionButton []
+                { icon = FeatherIcons.trash2
+                , name = "Clear Checked"
+                }
+            ]
+        )
 
 
-shoppingList : List (Html msg)
-shoppingList =
+shoppingList : List (Html msg) -> Html msg
+shoppingList content =
+    ul
+        [ css [ space_y_5 ] ]
+        content
+
+
+appShell : List (Html msg) -> List (Html msg)
+appShell content =
     [ header
         [ css
             [ bg_flatmate_200
@@ -76,20 +94,7 @@ shoppingList =
             , space_y_8
             ]
         ]
-        [ ul
-            [ css [ space_y_4 ] ]
-            [ shoppingListItem { checked = True, content = [ shoppingListItemAmount "1l", text " Milk" ] }
-            , shoppingListItem { checked = False, content = [ text "Butter" ] }
-            , shoppingListItem { checked = False, content = [ text "Eggs" ] }
-            , shoppingListItem { checked = True, content = [ text "Screwdriver" ] }
-            , shoppingListItem { checked = False, content = [ text "Avocado" ] }
-            , shoppingListItem { checked = True, content = [ text "Cherries" ] }
-            ]
-        , shoppingListActionButton []
-            { icon = FeatherIcons.trash2
-            , name = "Clear Checked"
-            }
-        ]
+        content
     ]
 
 
@@ -136,23 +141,21 @@ shoppingListItem : { checked : Bool, content : List (Html msg) } -> Html msg
 shoppingListItem { checked, content } =
     div
         [ css
-            [ h_5
+            [ h_6
             , w_full
             , px_5
             , relative
 
             --
-            , if checked then
-                Css.batch []
-
-              else
-                bg_flatmate_100
+            , cssWhen (not checked) [ bg_flatmate_100 ]
+            , transition
+            , duration_300
             ]
         ]
         [ span
             [ css
                 [ font_base
-                , text_lg
+                , text_xl
                 , absolute
                 , flex
                 , flex_row
@@ -160,10 +163,13 @@ shoppingListItem { checked, content } =
                 , Css.bottom (Css.px -4)
 
                 --
+                , transition
+                , duration_300
                 , if checked then
                     Css.batch
                         [ text_gray_500
                         , line_through
+                        , Css.property "text-decoration-thickness" "2px"
                         ]
 
                   else
@@ -174,17 +180,18 @@ shoppingListItem { checked, content } =
         ]
 
 
-shoppingListItemAmount : String -> Html msg
-shoppingListItemAmount amount =
+shoppingListItemAmount : List (Attribute msg) -> String -> Html msg
+shoppingListItemAmount attributes amount =
     span
-        [ css
-            [ rounded
-            , bg_flatmate_300
-            , text_white
-            , Css.padding2 Css.zero (Css.px 6)
-            , Css.margin2 Css.zero (Css.px -2)
+        (List.append attributes
+            [ css
+                [ rounded
+                , bg_flatmate_300
+                , text_white
+                , px_1
+                ]
             ]
-        ]
+        )
         [ text amount ]
 
 
@@ -384,3 +391,17 @@ wrapIcon attributes icon =
         |> fromUnstyled
         |> List.singleton
         |> span attributes
+
+
+cssWhen : Bool -> List Css.Style -> Css.Style
+cssWhen prop list =
+    Css.batch (when prop list)
+
+
+when : Bool -> List a -> List a
+when predicate list =
+    if predicate then
+        list
+
+    else
+        []
