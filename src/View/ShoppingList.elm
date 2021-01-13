@@ -1,5 +1,8 @@
 module View.ShoppingList exposing (..)
 
+{-| TODO Remove
+-}
+
 import Css
 import Css.Global
 import Html.Styled exposing (..)

@@ -1,7 +1,4 @@
 import "./main.css";
-// Normalize styles
-import "tailwindcss/dist/base.css";
-
 import { Elm } from "./Main.elm";
 
 const seed = new Uint32Array(10);
