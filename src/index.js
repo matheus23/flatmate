@@ -2,6 +2,8 @@ import "./main.css";
 import { Elm } from "./Main.elm";
 import * as webnative from "webnative";
 
+webnative.setup.debug({ enabled: true });
+
 const seed = new Uint32Array(10);
 window.crypto.getRandomValues(seed);
 
@@ -22,6 +24,21 @@ async function initializeWebnative() {
   try {
 
     const state = await webnative.initialise({ permissions });
+
+    if (state.authenticated) {
+      window.wn = state;
+      const fs = state.fs;
+
+      const appPath = fs.appPath();
+      const appDirectoryExists = await fs.exists(appPath);
+
+      if (!appDirectoryExists) {
+        await fs.mkdir(appPath);
+        await fs.publish();
+      }
+      console.log(appPath);
+      console.log(state.username);
+    }
 
     app.ports.redirectToLobby.subscribe(() => {
       webnative.redirectToLobby(state.premissions);
