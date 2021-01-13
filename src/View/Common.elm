@@ -2,32 +2,42 @@ module View.Common exposing (..)
 
 import Css
 import Css.Global
+import Css.Media
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (alt, attribute, css, for, id, placeholder, src, style, title, type_, value)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
+import Tailwind exposing (..)
 import Tailwind.Breakpoints exposing (..)
-import Tailwind.Utilities exposing (..)
 
 
 globalStyles : List Css.Global.Snippet
 globalStyles =
-    [ Css.Global.selector "html"
-        [ Css.backgroundImage (Css.url "/desktop-background.svg")
-        , Css.backgroundSize Css.cover
-        , h_full
-        , overflow_x_hidden
+    List.append Tailwind.globalStyles
+        [ Css.Global.selector "html"
+            [ h_full
+            , md
+                [ overflow_hidden
+                , Css.backgroundSize Css.cover
+                , Css.backgroundImage (Css.url "/desktop-background.svg")
+                ]
+            ]
+        , Css.Global.selector "body"
+            [ flex
+            , flex_col
+            , min_h_full
+            ]
         ]
-    , Css.Global.selector "body"
-        [ flex
-        , flex_col
-        , min_h_full
-        ]
-    ]
 
 
 view : Html msg
 view =
+    desktopScaffolding
+        [ span [ css [ m_auto ] ] [ text "Hi :)" ] ]
+
+
+desktopScaffolding : List (Html msg) -> Html msg
+desktopScaffolding content =
     div
         [ css
             [ flex
@@ -40,12 +50,14 @@ view =
                 [ flex
                 , flex_col
                 , flex_grow
-                , max_w_md
-                , shadow_xl
                 , bg_white
-                , mx_auto
-                , my_5
+                , md
+                    [ max_w_xl
+                    , shadow_xl
+                    , mx_auto
+                    , my_5
+                    ]
                 ]
             ]
-            [ span [ css [ m_auto ] ] [ text "Hi :)" ] ]
+            content
         ]

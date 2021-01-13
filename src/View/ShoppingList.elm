@@ -6,8 +6,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (alt, attribute, css, for, id, placeholder, src, style, title, type_, value)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
-import Tailwind.Breakpoints exposing (..)
-import Tailwind.Utilities exposing (..)
+import Tailwind exposing (..)
 
 
 type alias Elements msg =
