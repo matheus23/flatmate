@@ -5,6 +5,7 @@ import Css
 import Css.Animations
 import Css.Global
 import Css.Media
+import FeatherIcons
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (alt, attribute, css, for, id, placeholder, src, style, title, type_, value)
 import Html.Styled.Events as Events
@@ -19,8 +20,7 @@ globalStyles =
         [ Css.Global.selector "html"
             [ h_full
             , md
-                [ overflow_hidden
-                , background Assets.desktopBackground
+                [ backgroundImage Assets.desktopBackground
                 , Css.backgroundSize Css.cover
                 ]
             ]
@@ -35,9 +35,157 @@ globalStyles =
 view : Html msg
 view =
     desktopScaffolding
-        [ -- loadingScreen { message = "Authenticating..." }
-          signinScreen
+        -- [ -- loadingScreen { message = "Authenticating..." }
+        -- -- signinScreen
+        -- ]
+        shoppingList
+
+
+shoppingList : List (Html msg)
+shoppingList =
+    [ header
+        [ css
+            [ bg_flatmate_200
+            , px_5
+            , flex
+            , flex_row
+            , h_16
+            , items_center
+            , backgroundImage Assets.headerCircle
+            , Css.backgroundRepeat Css.noRepeat
+            , border_flatmate_300
+            , shadow_lg
+            ]
         ]
+        [ h1
+            [ css
+                [ text_white
+                , text_3xl
+                , font_bold
+                , font_base
+                ]
+            ]
+            [ text "Flatmate" ]
+        ]
+    , main_
+        [ css
+            [ flex_grow
+            , flex_row
+            , px_8
+            , py_8
+            , space_y_8
+            ]
+        ]
+        [ ul
+            [ css [ space_y_4 ] ]
+            [ shoppingListItem { checked = True, content = [ shoppingListItemAmount "1l", text " Milk" ] }
+            , shoppingListItem { checked = False, content = [ text "Butter" ] }
+            , shoppingListItem { checked = False, content = [ text "Eggs" ] }
+            , shoppingListItem { checked = True, content = [ text "Screwdriver" ] }
+            , shoppingListItem { checked = False, content = [ text "Avocado" ] }
+            , shoppingListItem { checked = True, content = [ text "Cherries" ] }
+            ]
+        , shoppingListActionButton []
+            { icon = FeatherIcons.trash2
+            , name = "Clear Checked"
+            }
+        ]
+    ]
+
+
+shoppingListActionButton : List (Attribute msg) -> { icon : FeatherIcons.Icon, name : String } -> Html msg
+shoppingListActionButton attributes { icon, name } =
+    button
+        (List.append attributes
+            [ css
+                [ flex
+                , flex_row
+                , font_base
+                , text_gray_800
+                , py_2
+                , px_3
+                , rounded_lg
+                , Css.property "transition-property" "background-color"
+                , border_2
+                , border_transparent
+                , duration_200
+                , Css.focus
+                    [ bg_flatmate_100
+                    , outline_none
+                    , border_2
+                    , border_flatmate_200
+                    ]
+                , Css.active
+                    [ bg_flatmate_200 ]
+                ]
+            ]
+        )
+        [ icon
+            |> FeatherIcons.withSize 24
+            |> wrapIcon
+                [ css
+                    [ text_gray_700
+                    , mr_3
+                    ]
+                ]
+        , text name
+        ]
+
+
+shoppingListItem : { checked : Bool, content : List (Html msg) } -> Html msg
+shoppingListItem { checked, content } =
+    div
+        [ css
+            [ h_5
+            , w_full
+            , px_5
+            , relative
+
+            --
+            , if checked then
+                Css.batch []
+
+              else
+                bg_flatmate_100
+            ]
+        ]
+        [ span
+            [ css
+                [ font_base
+                , text_lg
+                , absolute
+                , flex
+                , flex_row
+                , whitespace_pre
+                , Css.bottom (Css.px -4)
+
+                --
+                , if checked then
+                    Css.batch
+                        [ text_gray_500
+                        , line_through
+                        ]
+
+                  else
+                    text_gray_900
+                ]
+            ]
+            content
+        ]
+
+
+shoppingListItemAmount : String -> Html msg
+shoppingListItemAmount amount =
+    span
+        [ css
+            [ rounded
+            , bg_flatmate_300
+            , text_white
+            , Css.padding2 Css.zero (Css.px 6)
+            , Css.margin2 Css.zero (Css.px -2)
+            ]
+        ]
+        [ text amount ]
 
 
 desktopScaffolding : List (Html msg) -> Html msg
@@ -57,7 +205,7 @@ desktopScaffolding content =
                 , bg_white
                 , md
                     [ max_w_xl
-                    , shadow_xl
+                    , shadow_2xl
                     , mx_auto
                     , my_5
                     ]
@@ -120,7 +268,7 @@ signinScreen =
             , flex_col
             , px_16
             , py_8
-            , background Assets.signinCircle
+            , backgroundImage Assets.signinCircle
             , Css.backgroundSize Css.contain
             , Css.backgroundRepeat Css.noRepeat
             , space_y_8
@@ -147,10 +295,10 @@ signinScreen =
                 , font_base
                 , text_center
                 , mx_auto
-                , max_w_xs
+                , max_w_sm
                 ]
             ]
-            [ text "Write shopping lists faster and never forget! For you and your flatmates." ]
+            [ text "Write shopping lists faster and never forget groceries! For you and your flatmates." ]
         , doubleBordered button
             { outer =
                 [ css
@@ -178,9 +326,9 @@ signinScreen =
         ]
 
 
-background : String -> Css.Style
-background base64encodedSvg =
-    Css.property "background"
+backgroundImage : String -> Css.Style
+backgroundImage base64encodedSvg =
+    Css.property "background-image"
         ("url('" ++ base64Data base64encodedSvg ++ "')")
 
 
@@ -227,3 +375,12 @@ doubleBordered node attributes content =
             )
             content
         ]
+
+
+wrapIcon : List (Attribute msg) -> FeatherIcons.Icon -> Html msg
+wrapIcon attributes icon =
+    icon
+        |> FeatherIcons.toHtml []
+        |> fromUnstyled
+        |> List.singleton
+        |> span attributes

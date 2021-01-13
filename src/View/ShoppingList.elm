@@ -191,7 +191,7 @@ item { checked, content } =
                 Css.batch []
 
               else
-                bg_gray_200
+                bg_flatmate_200
             ]
         ]
         [ span
