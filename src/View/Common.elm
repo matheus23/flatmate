@@ -116,16 +116,88 @@ signinScreen =
     div
         [ css
             [ flex_grow
+            , flex
+            , flex_col
+            , px_16
+            , py_8
             , background Assets.signinCircle
             , Css.backgroundSize Css.contain
             , Css.backgroundRepeat Css.noRepeat
+            , space_y_8
             ]
         ]
-        [ button [] [ text "Sign in with Fission" ]
+        [ h1
+            [ css
+                [ text_center
+                , text_5xl
+                , font_base
+                , font_bold
+                , text_white
+                ]
+            ]
+            [ text "Flatmate" ]
+        , img
+            [ src (base64Data Assets.signinIllustration)
+            , css [ w_full ]
+            ]
+            []
+        , p
+            [ css
+                [ text_gray_800
+                , font_base
+                , text_center
+                , mx_auto
+                , max_w_xs
+                ]
+            ]
+            [ text "Write shopping lists faster and never forget! For you and your flatmates." ]
+        , button
+            [ css
+                [ mx_auto
+                , rounded_full
+                , flex
+                , flex_row
+                , bg_flatmate_300
+                , border_flatmate_300
+                , border_2
+                , focusable
+                ]
+            ]
+            [ div
+                [ css
+                    [ rounded_full
+                    , flex
+                    , flex_row
+                    , border_flatmate_100
+                    , border_2
+                    , py_3
+                    , px_5
+                    , text_xl
+                    , text_white
+                    , font_base
+                    ]
+                ]
+                [ img [ css [ w_5, mr_2 ], src (base64Data Assets.fissionLogoWhite) ] []
+                , text "Sign in with Fission"
+                ]
+            ]
         ]
 
 
 background : String -> Css.Style
 background base64encodedSvg =
     Css.property "background"
-        ("url('data:image/svg+xml;base64," ++ base64encodedSvg ++ "')")
+        ("url('" ++ base64Data base64encodedSvg ++ "')")
+
+
+base64Data : String -> String
+base64Data base64encodedSvg =
+    "data:image/svg+xml;base64," ++ base64encodedSvg
+
+
+focusable : Css.Style
+focusable =
+    Css.focus
+        [ outline_none
+        , shadow_outline
+        ]
