@@ -33,20 +33,24 @@ view elements =
             ]
         ]
         [ -- TODO switch to Document.application, so that this doesn't have to be included here
-          Css.Global.global
-            [ Css.Global.selector "html"
-                [ bg_gray_100
-                , overflow_x_hidden
-                ]
-            , Css.Global.selector "body"
-                [ flex
-                , flex_col
-                ]
-            ]
+          Css.Global.global globalStyles
         , navbar
         , shopList elements.shops
         , actionSection elements.actionSection
         ]
+
+
+globalStyles : List Css.Global.Snippet
+globalStyles =
+    [ Css.Global.selector "html"
+        [ bg_gray_100
+        , overflow_x_hidden
+        ]
+    , Css.Global.selector "body"
+        [ flex
+        , flex_col
+        ]
+    ]
 
 
 navbar : Html msg

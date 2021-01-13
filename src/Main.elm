@@ -13,6 +13,7 @@ import Task exposing (Task)
 import Time
 import UUID exposing (UUID)
 import Url.Builder as Url
+import View.Common
 import View.ShoppingList
 
 
@@ -177,7 +178,10 @@ view model =
 main : Program Flags Model Msg
 main =
     Browser.element
-        { view = view
+        { view =
+            \_ ->
+                View.Common.view
+                    |> Html.Styled.toUnstyled
         , init = init
         , update = \msg model -> update msg model
         , subscriptions = subscriptions
