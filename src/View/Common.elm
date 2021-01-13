@@ -32,46 +32,143 @@ globalStyles =
         ]
 
 
-view : Html msg
-view =
-    desktopScaffolding
-        (appShell
-            [ shoppingList
-                [ shoppingListItem { checked = True, content = [ text "Milk" ] }
-                , shoppingListItem { checked = False, content = [ text "Butter" ] }
-                , shoppingListItem { checked = False, content = [ text "Eggs" ] }
-                , shoppingListItem { checked = True, content = [ text "Screwdriver" ] }
-                , shoppingListItem { checked = False, content = [ text "Avocado" ] }
-                , shoppingListItem { checked = True, content = [ text "Cherries" ] }
-                ]
-            , shoppingListActions
-                [ shoppingListActionButton []
-                    { icon = FeatherIcons.trash2
-                    , name = "Clear Checked"
-                    }
-                ]
-            ]
-        )
-
-
-shoppingList : List (Html msg) -> Html msg
-shoppingList content =
-    ul
-        [ css [ space_y_5 ] ]
-        content
-
-
-shoppingListActions : List (Html msg) -> Html msg
-shoppingListActions content =
+desktopScaffolding : List (Html msg) -> Html msg
+desktopScaffolding content =
     div
         [ css
             [ flex
-            , flex_row
-            , items_center
-            , mx_auto
+            , flex_grow
             ]
         ]
-        content
+        [ Css.Global.global globalStyles
+        , div
+            [ css
+                [ flex
+                , flex_col
+                , flex_grow
+                , bg_white
+                , md
+                    [ max_w_xl
+                    , shadow_2xl
+                    , mx_auto
+                    , my_5
+                    ]
+                ]
+            ]
+            content
+        ]
+
+
+loadingScreen : { message : String } -> Html msg
+loadingScreen { message } =
+    div
+        [ css
+            [ flex
+            , flex_col
+            , items_center
+            , space_y_5
+            , m_auto
+            ]
+        ]
+        [ div
+            [ css
+                [ w_16
+                , h_16
+                , rounded_full
+                , bg_flatmate_300
+
+                --
+                , Css.animationName <|
+                    Css.Animations.keyframes
+                        [ ( 0, [ Css.Animations.transform [ Css.scale 1 ] ] )
+                        , ( 100, [ Css.Animations.transform [ Css.scale 0.25 ] ] )
+                        ]
+                , Css.animationDuration (Css.ms 800)
+                , Css.property "animation-iteration-count" "infinite"
+                , Css.property "animation-direction" "alternate"
+                , Css.property "animation-timing-function" "ease-in"
+                ]
+            ]
+            []
+        , span
+            [ css
+                [ font_base
+                , text_base
+                , italic
+                , text_gray_800
+                , font_light
+                ]
+            ]
+            [ text message ]
+        ]
+
+
+signinScreen : { onSignIn : msg } -> Html msg
+signinScreen { onSignIn } =
+    div
+        [ css
+            [ flex_grow
+            , flex
+            , flex_col
+            , px_16
+            , py_8
+            , backgroundImage Assets.signinCircle
+            , Css.backgroundSize Css.contain
+            , Css.backgroundRepeat Css.noRepeat
+            , space_y_8
+            ]
+        ]
+        [ h1
+            [ css
+                [ text_center
+                , text_5xl
+                , font_base
+                , font_bold
+                , text_white
+                ]
+            ]
+            [ text "Flatmate" ]
+        , img
+            [ src (base64Data Assets.signinIllustration)
+            , css [ w_full ]
+            ]
+            []
+        , p
+            [ css
+                [ text_gray_800
+                , font_base
+                , text_center
+                , mx_auto
+                , max_w_sm
+                ]
+            ]
+            [ text "Write shopping lists faster and never forget groceries! For you and your flatmates." ]
+        , doubleBordered button
+            { outer =
+                [ css
+                    [ mx_auto
+                    , flex
+                    , flex_row
+                    , focusable
+                    ]
+                , Events.onClick onSignIn
+                ]
+            , inner =
+                [ css
+                    [ flex
+                    , flex_row
+                    , py_2
+                    , px_4
+                    , text_xl
+                    , text_white
+                    , font_base
+                    ]
+                ]
+            }
+            [ img [ css [ w_5, mr_2 ], src (base64Data Assets.fissionLogoWhite) ] []
+            , text "Sign in with Fission"
+            ]
+        ]
 
 
 appShell : List (Html msg) -> List (Html msg)
@@ -112,6 +209,26 @@ appShell content =
         ]
         content
     ]
+
+
+shoppingList : List (Html msg) -> Html msg
+shoppingList content =
+    ul
+        [ css [ space_y_5 ] ]
+        content
+
+
+shoppingListActions : List (Html msg) -> Html msg
+shoppingListActions content =
+    div
+        [ css
+            [ flex
+            , flex_row
+            , items_center
+            , mx_auto
+            ]
+        ]
+        content
 
 
 shoppingListActionButton : List (Attribute msg) -> { icon : FeatherIcons.Icon, name : String } -> Html msg
@@ -211,153 +328,8 @@ shoppingListItemAmount attributes amount =
         [ text amount ]
 
 
-desktopScaffolding : List (Html msg) -> Html msg
-desktopScaffolding content =
-    div
-        [ css
-            [ flex
-            , flex_grow
-            ]
-        ]
-        [ Css.Global.global globalStyles
-        , div
-            [ css
-                [ flex
-                , flex_col
-                , flex_grow
-                , bg_white
-                , md
-                    [ max_w_xl
-                    , shadow_2xl
-                    , mx_auto
-                    , my_5
-                    ]
-                ]
-            ]
-            content
-        ]
 
-
-loadingScreen : { message : String } -> Html msg
-loadingScreen { message } =
-    div
-        [ css
-            [ flex
-            , flex_col
-            , items_center
-            , space_y_5
-            , m_auto
-            ]
-        ]
-        [ div
-            [ css
-                [ w_16
-                , h_16
-                , rounded_full
-                , bg_flatmate_300
-
-                --
-                , Css.animationName <|
-                    Css.Animations.keyframes
-                        [ ( 0, [ Css.Animations.transform [ Css.scale 1 ] ] )
-                        , ( 100, [ Css.Animations.transform [ Css.scale 0.25 ] ] )
-                        ]
-                , Css.animationDuration (Css.ms 800)
-                , Css.property "animation-iteration-count" "infinite"
-                , Css.property "animation-direction" "alternate"
-                , Css.property "animation-timing-function" "ease-in"
-                ]
-            ]
-            []
-        , span
-            [ css
-                [ font_base
-                , text_base
-                , italic
-                , text_gray_800
-                , font_light
-                ]
-            ]
-            [ text message ]
-        ]
-
-
-signinScreen : Html msg
-signinScreen =
-    div
-        [ css
-            [ flex_grow
-            , flex
-            , flex_col
-            , px_16
-            , py_8
-            , backgroundImage Assets.signinCircle
-            , Css.backgroundSize Css.contain
-            , Css.backgroundRepeat Css.noRepeat
-            , space_y_8
-            ]
-        ]
-        [ h1
-            [ css
-                [ text_center
-                , text_5xl
-                , font_base
-                , font_bold
-                , text_white
-                ]
-            ]
-            [ text "Flatmate" ]
-        , img
-            [ src (base64Data Assets.signinIllustration)
-            , css [ w_full ]
-            ]
-            []
-        , p
-            [ css
-                [ text_gray_800
-                , font_base
-                , text_center
-                , mx_auto
-                , max_w_sm
-                ]
-            ]
-            [ text "Write shopping lists faster and never forget groceries! For you and your flatmates." ]
-        , doubleBordered button
-            { outer =
-                [ css
-                    [ mx_auto
-                    , flex
-                    , flex_row
-                    , focusable
-                    ]
-                ]
-            , inner =
-                [ css
-                    [ flex
-                    , flex_row
-                    , py_2
-                    , px_4
-                    , text_xl
-                    , text_white
-                    , font_base
-                    ]
-                ]
-            }
-            [ img [ css [ w_5, mr_2 ], src (base64Data Assets.fissionLogoWhite) ] []
-            , text "Sign in with Fission"
-            ]
-        ]
-
-
-backgroundImage : String -> Css.Style
-backgroundImage base64encodedSvg =
-    Css.property "background-image"
-        ("url('" ++ base64Data base64encodedSvg ++ "')")
-
-
-base64Data : String -> String
-base64Data base64encodedSvg =
-    "data:image/svg+xml;base64," ++ base64encodedSvg
+--
 
 
 focusable : Css.Style
@@ -398,6 +370,21 @@ doubleBordered node attributes content =
             )
             content
         ]
+
+
+
+--
+
+
+backgroundImage : String -> Css.Style
+backgroundImage base64encodedSvg =
+    Css.property "background-image"
+        ("url('" ++ base64Data base64encodedSvg ++ "')")
+
+
+base64Data : String -> String
+base64Data base64encodedSvg =
+    "data:image/svg+xml;base64," ++ base64encodedSvg
 
 
 wrapIcon : List (Attribute msg) -> FeatherIcons.Icon -> Html msg

@@ -1,11 +1,15 @@
 module Main exposing (..)
 
 import Browser
+import FeatherIcons
 import Html
-import Html.Styled
+import Html.Styled exposing (text)
+import Json.Decode as Json
+import Ports
 import Random
 import UUID exposing (UUID)
-import View.Common
+import View.Common as View
+import Webnative.Types as Webnative
 
 
 
@@ -14,7 +18,14 @@ import View.Common
 
 type alias Model =
     { uuidSeeds : UUID.Seeds
+    , page : Page
     }
+
+
+type Page
+    = Loading
+    | SignIn
+    | ShoppingList
 
 
 type alias Flags =
@@ -29,6 +40,7 @@ init { randomness } =
             , seed3 = Random.initialSeed randomness.r3
             , seed4 = Random.initialSeed randomness.r4
             }
+      , page = Loading
       }
     , Cmd.none
     )
@@ -40,13 +52,52 @@ init { randomness } =
 
 type Msg
     = NoOp
+    | RedirectToLobby
+    | InitializedWebnative (Result Json.Error Webnative.State)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NoOp ->
-            ( model, Cmd.none )
+            ( model
+            , Cmd.none
+            )
+
+        RedirectToLobby ->
+            ( model
+            , Ports.redirectToLobby ()
+            )
+
+        InitializedWebnative result ->
+            case result of
+                Err error ->
+                    -- TODO Handle errors
+                    ( model
+                    , Cmd.none
+                    )
+
+                Ok state ->
+                    case state of
+                        Webnative.NotAuthorised _ ->
+                            ( { model | page = SignIn }
+                            , Cmd.none
+                            )
+
+                        Webnative.AuthCancelled _ ->
+                            ( { model | page = SignIn }
+                            , Cmd.none
+                            )
+
+                        Webnative.AuthSucceeded _ ->
+                            ( { model | page = ShoppingList }
+                            , Cmd.none
+                            )
+
+                        Webnative.Continuation _ ->
+                            ( { model | page = ShoppingList }
+                            , Cmd.none
+                            )
 
 
 
@@ -56,7 +107,37 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     Html.Styled.toUnstyled
-        View.Common.view
+        (View.desktopScaffolding
+            (case model.page of
+                Loading ->
+                    [ View.loadingScreen
+                        { message = "Trying to log in..." }
+                    ]
+
+                SignIn ->
+                    [ View.signinScreen
+                        { onSignIn = RedirectToLobby }
+                    ]
+
+                ShoppingList ->
+                    View.appShell
+                        [ View.shoppingList
+                            [ View.shoppingListItem { checked = True, content = [ text "Milk" ] }
+                            , View.shoppingListItem { checked = False, content = [ text "Butter" ] }
+                            , View.shoppingListItem { checked = False, content = [ text "Eggs" ] }
+                            , View.shoppingListItem { checked = True, content = [ text "Screwdriver" ] }
+                            , View.shoppingListItem { checked = False, content = [ text "Avocado" ] }
+                            , View.shoppingListItem { checked = True, content = [ text "Cherries" ] }
+                            ]
+                        , View.shoppingListActions
+                            [ View.shoppingListActionButton []
+                                { icon = FeatherIcons.trash2
+                                , name = "Clear Checked"
+                                }
+                            ]
+                        ]
+            )
+        )
 
 
 
@@ -75,4 +156,5 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Ports.initializedWebnative
+        (Json.decodeValue Webnative.decoderState >> InitializedWebnative)
