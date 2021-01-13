@@ -151,35 +151,29 @@ signinScreen =
                 ]
             ]
             [ text "Write shopping lists faster and never forget! For you and your flatmates." ]
-        , button
-            [ css
-                [ mx_auto
-                , rounded_full
-                , flex
-                , flex_row
-                , bg_flatmate_300
-                , border_flatmate_300
-                , border_2
-                , focusable
-                ]
-            ]
-            [ div
+        , doubleBordered button
+            { outer =
                 [ css
-                    [ rounded_full
+                    [ mx_auto
                     , flex
                     , flex_row
-                    , border_flatmate_100
-                    , border_2
-                    , py_3
-                    , px_5
+                    , focusable
+                    ]
+                ]
+            , inner =
+                [ css
+                    [ flex
+                    , flex_row
+                    , py_2
+                    , px_4
                     , text_xl
                     , text_white
                     , font_base
                     ]
                 ]
-                [ img [ css [ w_5, mr_2 ], src (base64Data Assets.fissionLogoWhite) ] []
-                , text "Sign in with Fission"
-                ]
+            }
+            [ img [ css [ w_5, mr_2 ], src (base64Data Assets.fissionLogoWhite) ] []
+            , text "Sign in with Fission"
             ]
         ]
 
@@ -200,4 +194,36 @@ focusable =
     Css.focus
         [ outline_none
         , shadow_outline
+        ]
+
+
+doubleBordered :
+    (List (Attribute msg) -> List (Html msg) -> Html msg)
+    ->
+        { outer : List (Attribute msg)
+        , inner : List (Attribute msg)
+        }
+    -> List (Html msg)
+    -> Html msg
+doubleBordered node attributes content =
+    node
+        (List.append attributes.outer
+            [ css
+                [ rounded_full
+                , bg_flatmate_300
+                , border_flatmate_300
+                , border_2
+                ]
+            ]
+        )
+        [ div
+            (List.append attributes.inner
+                [ css
+                    [ rounded_full
+                    , border_flatmate_100
+                    , border_2
+                    ]
+                ]
+            )
+            content
         ]
