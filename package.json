@@ -30,7 +30,7 @@
     "elm-asset-webpack-loader": "1.1.2",
     "elm-format": "^0.8.3",
     "elm-hot-webpack-loader": "1.1.6",
-    "elm-tailwind-origami": "../elm-tailwind-origami/",
+    "elm-tailwind-origami": "https://github.com/matheus23/elm-tailwind-origami.git#35a0d5fcfbde9c9c4f26617734bc77b556a27419",
     "elm-test": "latest-0.19.1",
     "elm-webpack-loader": "6.0.1",
     "file-loader": "1.1.11",
