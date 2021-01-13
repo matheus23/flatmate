@@ -19,7 +19,8 @@
             "elm/url": "1.0.0",
             "elm-community/list-extra": "8.2.4",
             "miniBill/elm-codec": "2.0.0",
-            "rtfeldman/elm-css": "16.0.1"
+            "rtfeldman/elm-css": "16.0.1",
+            "truqu/elm-base64": "2.0.4"
         },
         "indirect": {
             "Skinney/murmur3": "2.0.8",

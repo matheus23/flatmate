@@ -1,5 +1,6 @@
 module View.Common exposing (..)
 
+import Assets
 import Css
 import Css.Animations
 import Css.Global
@@ -19,8 +20,8 @@ globalStyles =
             [ h_full
             , md
                 [ overflow_hidden
+                , background Assets.desktopBackground
                 , Css.backgroundSize Css.cover
-                , Css.backgroundImage (Css.url "/desktop-background.svg")
                 ]
             ]
         , Css.Global.selector "body"
@@ -114,7 +115,17 @@ signinScreen : Html msg
 signinScreen =
     div
         [ css
-            [ Css.property "background-image" "" ]
+            [ flex_grow
+            , background Assets.signinCircle
+            , Css.backgroundSize Css.contain
+            , Css.backgroundRepeat Css.noRepeat
+            ]
         ]
         [ button [] [ text "Sign in with Fission" ]
         ]
+
+
+background : String -> Css.Style
+background base64encodedSvg =
+    Css.property "background"
+        ("url('data:image/svg+xml;base64," ++ base64encodedSvg ++ "')")
