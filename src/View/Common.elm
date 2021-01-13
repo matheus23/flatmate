@@ -44,10 +44,12 @@ view =
                 , shoppingListItem { checked = False, content = [ text "Avocado" ] }
                 , shoppingListItem { checked = True, content = [ text "Cherries" ] }
                 ]
-            , shoppingListActionButton []
-                { icon = FeatherIcons.trash2
-                , name = "Clear Checked"
-                }
+            , shoppingListActions
+                [ shoppingListActionButton []
+                    { icon = FeatherIcons.trash2
+                    , name = "Clear Checked"
+                    }
+                ]
             ]
         )
 
@@ -56,6 +58,19 @@ shoppingList : List (Html msg) -> Html msg
 shoppingList content =
     ul
         [ css [ space_y_5 ] ]
+        content
+
+
+shoppingListActions : List (Html msg) -> Html msg
+shoppingListActions content =
+    div
+        [ css
+            [ flex
+            , flex_row
+            , items_center
+            , mx_auto
+            ]
+        ]
         content
 
 
@@ -88,7 +103,8 @@ appShell content =
     , main_
         [ css
             [ flex_grow
-            , flex_row
+            , flex
+            , flex_col
             , px_8
             , py_8
             , space_y_8
@@ -130,7 +146,7 @@ shoppingListActionButton attributes { icon, name } =
             |> wrapIcon
                 [ css
                     [ text_gray_700
-                    , mr_3
+                    , mr_2
                     ]
                 ]
         , text name
