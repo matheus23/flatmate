@@ -1,6 +1,7 @@
 module View.Common exposing (..)
 
 import Css
+import Css.Animations
 import Css.Global
 import Css.Media
 import Html.Styled exposing (..)
@@ -33,7 +34,8 @@ globalStyles =
 view : Html msg
 view =
     desktopScaffolding
-        [ span [ css [ m_auto ] ] [ text "Hi :)" ] ]
+        [ loadingScreen { message = "Authenticating..." }
+        ]
 
 
 desktopScaffolding : List (Html msg) -> Html msg
@@ -60,4 +62,48 @@ desktopScaffolding content =
                 ]
             ]
             content
+        ]
+
+
+loadingScreen : { message : String } -> Html msg
+loadingScreen { message } =
+    div
+        [ css
+            [ flex
+            , flex_col
+            , items_center
+            , space_y_5
+            , m_auto
+            ]
+        ]
+        [ div
+            [ css
+                [ w_16
+                , h_16
+                , rounded_full
+                , bg_flatmate_300
+
+                --
+                , Css.animationName <|
+                    Css.Animations.keyframes
+                        [ ( 0, [ Css.Animations.transform [ Css.scale 1 ] ] )
+                        , ( 100, [ Css.Animations.transform [ Css.scale 0.25 ] ] )
+                        ]
+                , Css.animationDuration (Css.ms 800)
+                , Css.property "animation-iteration-count" "infinite"
+                , Css.property "animation-direction" "alternate"
+                , Css.property "animation-timing-function" "ease-in"
+                ]
+            ]
+            []
+        , span
+            [ css
+                [ font_base
+                , text_base
+                , italic
+                , text_gray_800
+                , font_light
+                ]
+            ]
+            [ text message ]
         ]
