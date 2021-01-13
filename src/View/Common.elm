@@ -34,7 +34,8 @@ globalStyles =
 view : Html msg
 view =
     desktopScaffolding
-        [ loadingScreen { message = "Authenticating..." }
+        [ -- loadingScreen { message = "Authenticating..." }
+          signinScreen
         ]
 
 
@@ -106,4 +107,14 @@ loadingScreen { message } =
                 ]
             ]
             [ text message ]
+        ]
+
+
+signinScreen : Html msg
+signinScreen =
+    div
+        [ css
+            [ Css.property "background-image" "" ]
+        ]
+        [ button [] [ text "Sign in with Fission" ]
         ]
