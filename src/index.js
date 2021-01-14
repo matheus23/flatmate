@@ -1,4 +1,5 @@
 import "./main.css";
+// import "../config/styles.tailwind.js"; // uses snowpack to generate a Tailwind.elm file // Shelved for now
 import { Elm } from "./Main.elm";
 import * as webnative from "webnative";
 import * as webnativeElm from "webnative-elm";
