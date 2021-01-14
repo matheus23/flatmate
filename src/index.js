@@ -1,6 +1,7 @@
 import "./main.css";
 import { Elm } from "./Main.elm";
 import * as webnative from "webnative";
+import * as webnativeElm from "webnative-elm";
 
 webnative.setup.debug({ enabled: true });
 
@@ -18,6 +19,8 @@ const app = Elm.Main.init({
   node: document.getElementById("root"),
   flags: { randomness: { r1: seed[1], r2: seed[2], r3: seed[3], r4: seed[4] } }
 });
+
+app.ports.webnativeRequest.subscribe(() => console.log("port activated"))
 
 
 async function initializeWebnative() {
@@ -38,9 +41,7 @@ async function initializeWebnative() {
       }
     }
 
-    app.ports.redirectToLobby.subscribe(() => {
-      webnative.redirectToLobby(state.premissions);
-    });
+    webnativeElm.setup(app, state.fs);
 
     app.ports.initializedWebnative.send(state);
 
@@ -53,6 +54,7 @@ async function initializeWebnative() {
 async function loadServiceWorker() {
   try {
     const registration = await navigator.serviceWorker.register('/sw.js');
+    registration.unregister();
     // used for native notifications. Best to call this when issuing the first notification
     // registration.pushManager.subscribe({ userVisibleOnly: true });
     console.log('SW registered: ', registration);
@@ -72,7 +74,7 @@ if ('serviceWorker' in navigator) {
     }
   });
 
-  window.addEventListener('load', loadServiceWorker);
+  // window.addEventistener('load', loadServiceWorker);
 }
 window.loadServiceWorker = loadServiceWorker;
 window.webnative = webnative;

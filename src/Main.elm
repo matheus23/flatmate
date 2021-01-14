@@ -9,7 +9,9 @@ import Ports
 import Random
 import UUID exposing (UUID)
 import View.Common as View
+import Webnative
 import Webnative.Types as Webnative
+import Wnfs
 
 
 
@@ -46,6 +48,23 @@ init { randomness } =
     )
 
 
+base : Wnfs.Base
+base =
+    Wnfs.AppData baseParams
+
+
+baseParams : { name : String, creator : String }
+baseParams =
+    { creator = "matheus23-test"
+    , name = "Flatmate"
+    }
+
+
+appPath : List String
+appPath =
+    [ "private", "Apps", baseParams.creator, baseParams.name ]
+
+
 
 ---- UPDATE ----
 
@@ -54,6 +73,7 @@ type Msg
     = NoOp
     | RedirectToLobby
     | InitializedWebnative (Result Json.Error Webnative.State)
+    | GotWnfsResponse Webnative.Response
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -66,13 +86,21 @@ update msg model =
 
         RedirectToLobby ->
             ( model
-            , Ports.redirectToLobby ()
+            , Cmd.batch
+                [ Webnative.redirectToLobby Webnative.CurrentUrl
+                    (Just
+                        { app = Just baseParams
+                        , fs = Nothing
+                        }
+                    )
+                    |> Ports.webnativeRequest
+                ]
             )
 
         InitializedWebnative result ->
             case result of
                 Err error ->
-                    -- TODO Handle errors
+                    -- TODO Errors
                     ( model
                     , Cmd.none
                     )
@@ -80,24 +108,40 @@ update msg model =
                 Ok state ->
                     case state of
                         Webnative.NotAuthorised _ ->
-                            ( { model | page = SignIn }
-                            , Cmd.none
-                            )
+                            notAuthenticated model
 
                         Webnative.AuthCancelled _ ->
-                            ( { model | page = SignIn }
-                            , Cmd.none
-                            )
+                            notAuthenticated model
 
                         Webnative.AuthSucceeded _ ->
-                            ( { model | page = ShoppingList }
-                            , Cmd.none
-                            )
+                            authenticated model
 
                         Webnative.Continuation _ ->
-                            ( { model | page = ShoppingList }
-                            , Cmd.none
-                            )
+                            authenticated model
+
+        GotWnfsResponse response ->
+            case Wnfs.decodeResponse (\_ -> Err "No tags to parse") response of
+                Ok ( n, _ ) ->
+                    never n
+
+                _ ->
+                    -- TODO: Errors
+                    ( model, Cmd.none )
+
+
+authenticated : Model -> ( Model, Cmd Msg )
+authenticated model =
+    ( { model | page = ShoppingList }
+    , Wnfs.ls base { path = appPath, tag = "LsAppPath" }
+        |> Ports.wnfsRequest
+    )
+
+
+notAuthenticated : Model -> ( Model, Cmd Msg )
+notAuthenticated model =
+    ( { model | page = SignIn }
+    , Cmd.none
+    )
 
 
 
@@ -156,5 +200,8 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Ports.initializedWebnative
-        (Json.decodeValue Webnative.decoderState >> InitializedWebnative)
+    Sub.batch
+        [ Ports.initializedWebnative
+            (Json.decodeValue Webnative.decoderState >> InitializedWebnative)
+        , Ports.wnfsResponse GotWnfsResponse
+        ]
