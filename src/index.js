@@ -36,8 +36,6 @@ async function initializeWebnative() {
         await fs.mkdir(appPath);
         await fs.publish();
       }
-      console.log(appPath);
-      console.log(state.username);
     }
 
     app.ports.redirectToLobby.subscribe(() => {
