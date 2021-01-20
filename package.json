@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "snowpack dev --config config/snowpack.js",
+    "build": "snowpack build --config config/snowpack.js",
     "gen:tailwind": "node config/codegen.mjs"
   },
   "devDependencies": {
