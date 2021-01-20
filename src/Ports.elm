@@ -7,6 +7,9 @@ import Webnative
 port initializedWebnative : (Json.Value -> msg) -> Sub msg
 
 
+port log : String -> Cmd msg
+
+
 
 -- Webnative-Elm Ports
 

@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Browser.Navigation as Navigation
+import Codec exposing (Codec)
 import FeatherIcons
 import Html
 import Html.Styled exposing (text)
@@ -28,7 +29,7 @@ type alias Model =
 
 
 type Page
-    = Loading
+    = Loading String
     | SignIn
     | ShoppingList ShoppingListModel
 
@@ -50,7 +51,7 @@ init { randomness } _ navKey =
             , seed4 = Random.initialSeed randomness.r4
             }
       , navKey = navKey
-      , page = Loading
+      , page = Loading "Trying to log in..."
       }
     , Cmd.none
     )
@@ -111,6 +112,10 @@ type WebnativeMsg
     | GotResponse Webnative.Response
 
 
+type FileSystemAction
+    = LoadedInitialState
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -150,7 +155,7 @@ updateWebnative msg model =
 
         Initialized result ->
             case result of
-                Err error ->
+                Err _ ->
                     -- TODO Errors
                     ( model
                     , Cmd.none
@@ -171,19 +176,44 @@ updateWebnative msg model =
                             authenticated model
 
         GotResponse response ->
-            case Wnfs.decodeResponse (\_ -> Err "No tags to parse") response of
-                Ok ( n, _ ) ->
-                    never n
+            case
+                Wnfs.decodeResponse
+                    (\tag ->
+                        Codec.decodeString codecFileSystemAction tag
+                            |> Result.mapError Json.errorToString
+                    )
+                    response
+            of
+                Ok ( LoadedInitialState, Wnfs.Utf8Content stateJson ) ->
+                    case Codec.decodeString codecShoppingListModel stateJson of
+                        Ok initialState ->
+                            ( { model
+                                | page = ShoppingList initialState
+                              }
+                            , Cmd.none
+                            )
 
-                _ ->
-                    -- TODO: Errors
-                    ( model, Cmd.none )
+                        Err error ->
+                            ( { model
+                                | page = ShoppingList { items = [] }
+                              }
+                            , Ports.log ("Couldn't load state from wnfs:\n" ++ Json.errorToString error)
+                            )
+
+                Ok ( LoadedInitialState, _ ) ->
+                    ( model, Ports.log "incorrect response type for 'LoadedInitialState'" )
+
+                Err errorMsg ->
+                    ( model, Ports.log ("got an error from wnfs: " ++ errorMsg) )
 
 
 authenticated : Model -> ( Model, Cmd Msg )
 authenticated model =
-    ( { model | page = ShoppingList initShoppingList }
-    , Wnfs.ls base { path = appPath, tag = "LsAppPath" }
+    ( { model | page = Loading "Reading saved shopping list" }
+    , Wnfs.readUtf8 base
+        { path = [ "state.json" ]
+        , tag = Codec.encodeToString 0 codecFileSystemAction LoadedInitialState
+        }
         |> Ports.wnfsRequest
     )
 
@@ -235,9 +265,9 @@ view model =
         [ Html.Styled.toUnstyled
             (View.desktopScaffolding
                 (case model.page of
-                    Loading ->
+                    Loading message ->
                         [ View.loadingScreen
-                            { message = "Trying to log in..." }
+                            { message = message }
                         ]
 
                     SignIn ->
@@ -293,3 +323,34 @@ subscriptions _ =
             (Json.decodeValue Webnative.decoderState >> Initialized >> WebnativeMsg)
         , Ports.wnfsResponse (GotResponse >> WebnativeMsg)
         ]
+
+
+
+-- Codecs
+
+
+codecShoppingListModel : Codec ShoppingListModel
+codecShoppingListModel =
+    Codec.object ShoppingListModel
+        |> Codec.field "items"
+            .items
+            (Codec.list
+                (Codec.object (\checked name -> { checked = checked, name = name })
+                    |> Codec.field "checked" .checked Codec.bool
+                    |> Codec.field "name" .name Codec.string
+                    |> Codec.buildObject
+                )
+            )
+        |> Codec.buildObject
+
+
+codecFileSystemAction : Codec FileSystemAction
+codecFileSystemAction =
+    Codec.custom
+        (\cLoadedInitialState value ->
+            case value of
+                LoadedInitialState ->
+                    cLoadedInitialState
+        )
+        |> Codec.variant0 "LoadedInitialState" LoadedInitialState
+        |> Codec.buildCustom
