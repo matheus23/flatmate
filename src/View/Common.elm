@@ -274,10 +274,9 @@ shoppingListItem : { checked : Bool, content : List (Html msg) } -> Html msg
 shoppingListItem { checked, content } =
     div
         [ css
-            [ h_6
+            [ Css.minHeight (Css.rem (24 / 16))
             , w_full
             , px_5
-            , relative
 
             --
             , cssWhen (not checked) [ bg_flatmate_100 ]
@@ -289,11 +288,9 @@ shoppingListItem { checked, content } =
             [ css
                 [ font_base
                 , text_xl
-                , absolute
                 , flex
                 , flex_row
-                , whitespace_pre
-                , Css.bottom (Css.px -4)
+                , whitespace_pre_wrap
 
                 --
                 , transition
