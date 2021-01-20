@@ -90,6 +90,9 @@ appPath =
 
 type Msg
     = NoOp
+      -- Shopping List
+    | CheckItem Int
+      -- Webnative
     | RedirectToLobby
     | InitializedWebnative (Result Json.Error Webnative.State)
     | GotWnfsResponse Webnative.Response
@@ -103,6 +106,33 @@ update msg model =
             , Cmd.none
             )
 
+        -- ShoppingList
+        CheckItem indexToToggle ->
+            ( case model.page of
+                ShoppingList shoppingList ->
+                    { model
+                        | page =
+                            ShoppingList
+                                { shoppingList
+                                    | items =
+                                        shoppingList.items
+                                            |> List.indexedMap
+                                                (\index item ->
+                                                    if index == indexToToggle then
+                                                        { item | checked = not item.checked }
+
+                                                    else
+                                                        item
+                                                )
+                                }
+                    }
+
+                _ ->
+                    model
+            , Cmd.none
+            )
+
+        -- Webnative
         RedirectToLobby ->
             ( model
             , Cmd.batch
@@ -187,7 +217,11 @@ view model =
                         [ shoppingList.items
                             |> List.indexedMap
                                 (\index { checked, name } ->
-                                    View.shoppingListItem { checked = checked, content = [ text name ] }
+                                    View.shoppingListItem
+                                        { checked = checked
+                                        , onCheck = CheckItem index
+                                        , content = [ text name ]
+                                        }
                                 )
                             |> View.shoppingList
                         , View.shoppingListActions

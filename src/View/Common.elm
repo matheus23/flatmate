@@ -270,19 +270,21 @@ shoppingListActionButton attributes { icon, name } =
         ]
 
 
-shoppingListItem : { checked : Bool, content : List (Html msg) } -> Html msg
-shoppingListItem { checked, content } =
+shoppingListItem : { checked : Bool, onCheck : msg, content : List (Html msg) } -> Html msg
+shoppingListItem { checked, onCheck, content } =
     div
         [ css
             [ Css.minHeight (Css.rem (24 / 16))
             , w_full
             , px_5
+            , select_none
 
             --
             , cssWhen (not checked) [ bg_flatmate_100 ]
             , transition
             , duration_300
             ]
+        , Events.onClick onCheck
         ]
         [ span
             [ css
