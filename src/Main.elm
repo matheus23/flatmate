@@ -117,6 +117,7 @@ type FileSystemAction
     | CheckedStateExists
     | CreatedInitialState ShoppingListModel
     | SavedState
+    | ReloadedState
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -241,6 +242,26 @@ updateWebnative msg model =
                         ]
                     )
 
+                Ok ( ReloadedState, Wnfs.Utf8Content stateJson ) ->
+                    case Codec.decodeString codecShoppingListModel stateJson of
+                        Ok state ->
+                            ( { model
+                                | page = ShoppingList state
+                              }
+                            , Ports.log "Reloaded state."
+                            )
+
+                        Err error ->
+                            ( model
+                            , Ports.log
+                                ("Couldn't reload state from wnfs:\n"
+                                    ++ Json.errorToString error
+                                )
+                            )
+
+                Ok ( ReloadedState, _ ) ->
+                    ( model, Ports.log "unexpected response type for 'ReloadedState'" )
+
                 Err errorMsg ->
                     ( model, Ports.log ("got an error from wnfs: " ++ errorMsg) )
 
@@ -294,6 +315,15 @@ saveState shoppingList =
         , tag = Codec.encodeToString 0 codecFileSystemAction SavedState
         }
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
+        |> Ports.wnfsRequest
+
+
+reloadState : Cmd Msg
+reloadState =
+    Wnfs.readUtf8 base
+        { path = [ "state.json" ]
+        , tag = Codec.encodeToString 0 codecFileSystemAction ReloadedState
+        }
         |> Ports.wnfsRequest
 
 
@@ -419,7 +449,7 @@ codecShoppingListModel =
 codecFileSystemAction : Codec FileSystemAction
 codecFileSystemAction =
     Codec.custom
-        (\cLoadedInitialState cCheckedStateExists cCreatedInitialState cSavedState value ->
+        (\cLoadedInitialState cCheckedStateExists cCreatedInitialState cSavedState cReloadedState value ->
             case value of
                 LoadedInitialState ->
                     cLoadedInitialState
@@ -432,9 +462,13 @@ codecFileSystemAction =
 
                 SavedState ->
                     cSavedState
+
+                ReloadedState ->
+                    cReloadedState
         )
         |> Codec.variant0 "LoadedInitialState" LoadedInitialState
         |> Codec.variant0 "CheckedStateExists" CheckedStateExists
         |> Codec.variant1 "CreatedInitialState" CreatedInitialState codecShoppingListModel
         |> Codec.variant0 "SavedState" SavedState
+        |> Codec.variant0 "ReloadedState" ReloadedState
         |> Codec.buildCustom
