@@ -17,7 +17,6 @@ const permissions = {
 }
 
 const app = Elm.Main.init({
-  node: document.getElementById("root"),
   flags: { randomness: { r1: seed[1], r2: seed[2], r3: seed[3], r4: seed[4] } }
 });
 

@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Browser
+import Browser.Navigation as Navigation
 import FeatherIcons
 import Html
 import Html.Styled exposing (text)
@@ -8,6 +9,7 @@ import Json.Decode as Json
 import Ports
 import Random
 import UUID exposing (UUID)
+import Url exposing (Url)
 import View.Common as View
 import Webnative
 import Webnative.Types as Webnative
@@ -20,6 +22,7 @@ import Wnfs
 
 type alias Model =
     { uuidSeeds : UUID.Seeds
+    , navKey : Navigation.Key
     , page : Page
     }
 
@@ -38,14 +41,15 @@ type alias Flags =
     { randomness : { r1 : Int, r2 : Int, r3 : Int, r4 : Int } }
 
 
-init : Flags -> ( Model, Cmd Msg )
-init { randomness } =
+init : Flags -> Url -> Navigation.Key -> ( Model, Cmd Msg )
+init { randomness } _ navKey =
     ( { uuidSeeds =
             { seed1 = Random.initialSeed randomness.r1
             , seed2 = Random.initialSeed randomness.r2
             , seed3 = Random.initialSeed randomness.r3
             , seed4 = Random.initialSeed randomness.r4
             }
+      , navKey = navKey
       , page = Loading
       }
     , Cmd.none
@@ -92,6 +96,9 @@ type Msg
     = NoOp
     | ShoppingListMsg ShoppingListMsg
     | WebnativeMsg WebnativeMsg
+      -- Url
+    | UrlRequest Browser.UrlRequest
+    | UrlChanged Url
 
 
 type ShoppingListMsg
@@ -117,6 +124,12 @@ update msg model =
 
         WebnativeMsg webnativeMsg ->
             updateWebnative webnativeMsg model
+
+        UrlRequest _ ->
+            ( model, Cmd.none )
+
+        UrlChanged _ ->
+            ( model, Cmd.none )
 
 
 updateWebnative : WebnativeMsg -> Model -> ( Model, Cmd Msg )
@@ -215,42 +228,46 @@ updateShoppingList msg model =
 ---- VIEW ----
 
 
-view : Model -> Html.Html Msg
+view : Model -> Browser.Document Msg
 view model =
-    Html.Styled.toUnstyled
-        (View.desktopScaffolding
-            (case model.page of
-                Loading ->
-                    [ View.loadingScreen
-                        { message = "Trying to log in..." }
-                    ]
-
-                SignIn ->
-                    [ View.signinScreen
-                        { onSignIn = WebnativeMsg RedirectToLobby }
-                    ]
-
-                ShoppingList shoppingList ->
-                    View.appShell
-                        [ shoppingList.items
-                            |> List.indexedMap
-                                (\index { checked, name } ->
-                                    View.shoppingListItem
-                                        { checked = checked
-                                        , onCheck = ShoppingListMsg (CheckItem index)
-                                        , content = [ text name ]
-                                        }
-                                )
-                            |> View.shoppingList
-                        , View.shoppingListActions
-                            [ View.shoppingListActionButton []
-                                { icon = FeatherIcons.trash2
-                                , name = "Clear Checked"
-                                }
-                            ]
+    { title = "Flatmate"
+    , body =
+        [ Html.Styled.toUnstyled
+            (View.desktopScaffolding
+                (case model.page of
+                    Loading ->
+                        [ View.loadingScreen
+                            { message = "Trying to log in..." }
                         ]
+
+                    SignIn ->
+                        [ View.signinScreen
+                            { onSignIn = WebnativeMsg RedirectToLobby }
+                        ]
+
+                    ShoppingList shoppingList ->
+                        View.appShell
+                            [ shoppingList.items
+                                |> List.indexedMap
+                                    (\index { checked, name } ->
+                                        View.shoppingListItem
+                                            { checked = checked
+                                            , onCheck = ShoppingListMsg (CheckItem index)
+                                            , content = [ text name ]
+                                            }
+                                    )
+                                |> View.shoppingList
+                            , View.shoppingListActions
+                                [ View.shoppingListActionButton []
+                                    { icon = FeatherIcons.trash2
+                                    , name = "Clear Checked"
+                                    }
+                                ]
+                            ]
+                )
             )
-        )
+        ]
+    }
 
 
 
@@ -259,11 +276,13 @@ view model =
 
 main : Program Flags Model Msg
 main =
-    Browser.element
+    Browser.application
         { view = view
         , init = init
         , update = \msg model -> update msg model
         , subscriptions = subscriptions
+        , onUrlRequest = UrlRequest
+        , onUrlChange = UrlChanged
         }
 
 
