@@ -11,6 +11,7 @@
     "elm": "latest-0.19.1",
     "elm-format": "^0.8.3",
     "elm-tailwind-origami": "https://github.com/matheus23/elm-tailwind-origami.git#35a0d5fcfbde9c9c4f26617734bc77b556a27419",
+    "elm-tooling": "^1.0.2",
     "snowpack": "^3.0.10",
     "snowpack-plugin-elm": "^0.4.2",
     "tailwindcss": "^2.0.2"
