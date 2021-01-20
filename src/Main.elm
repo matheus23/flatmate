@@ -90,12 +90,18 @@ appPath =
 
 type Msg
     = NoOp
-      -- Shopping List
-    | CheckItem Int
-      -- Webnative
-    | RedirectToLobby
-    | InitializedWebnative (Result Json.Error Webnative.State)
-    | GotWnfsResponse Webnative.Response
+    | ShoppingListMsg ShoppingListMsg
+    | WebnativeMsg WebnativeMsg
+
+
+type ShoppingListMsg
+    = CheckItem Int
+
+
+type WebnativeMsg
+    = RedirectToLobby
+    | Initialized (Result Json.Error Webnative.State)
+    | GotResponse Webnative.Response
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -106,33 +112,16 @@ update msg model =
             , Cmd.none
             )
 
-        -- ShoppingList
-        CheckItem indexToToggle ->
-            ( case model.page of
-                ShoppingList shoppingList ->
-                    { model
-                        | page =
-                            ShoppingList
-                                { shoppingList
-                                    | items =
-                                        shoppingList.items
-                                            |> List.indexedMap
-                                                (\index item ->
-                                                    if index == indexToToggle then
-                                                        { item | checked = not item.checked }
+        ShoppingListMsg shoppingListMsg ->
+            updateShoppingList shoppingListMsg model
 
-                                                    else
-                                                        item
-                                                )
-                                }
-                    }
+        WebnativeMsg webnativeMsg ->
+            updateWebnative webnativeMsg model
 
-                _ ->
-                    model
-            , Cmd.none
-            )
 
-        -- Webnative
+updateWebnative : WebnativeMsg -> Model -> ( Model, Cmd Msg )
+updateWebnative msg model =
+    case msg of
         RedirectToLobby ->
             ( model
             , Cmd.batch
@@ -146,7 +135,7 @@ update msg model =
                 ]
             )
 
-        InitializedWebnative result ->
+        Initialized result ->
             case result of
                 Err error ->
                     -- TODO Errors
@@ -168,7 +157,7 @@ update msg model =
                         Webnative.Continuation _ ->
                             authenticated model
 
-        GotWnfsResponse response ->
+        GotResponse response ->
             case Wnfs.decodeResponse (\_ -> Err "No tags to parse") response of
                 Ok ( n, _ ) ->
                     never n
@@ -193,6 +182,35 @@ notAuthenticated model =
     )
 
 
+updateShoppingList : ShoppingListMsg -> Model -> ( Model, Cmd Msg )
+updateShoppingList msg model =
+    case model.page of
+        ShoppingList shoppingList ->
+            case msg of
+                CheckItem indexToToggle ->
+                    ( { model
+                        | page =
+                            ShoppingList
+                                { shoppingList
+                                    | items =
+                                        shoppingList.items
+                                            |> List.indexedMap
+                                                (\index item ->
+                                                    if index == indexToToggle then
+                                                        { item | checked = not item.checked }
+
+                                                    else
+                                                        item
+                                                )
+                                }
+                      }
+                    , Cmd.none
+                    )
+
+        _ ->
+            ( model, Cmd.none )
+
+
 
 ---- VIEW ----
 
@@ -209,7 +227,7 @@ view model =
 
                 SignIn ->
                     [ View.signinScreen
-                        { onSignIn = RedirectToLobby }
+                        { onSignIn = WebnativeMsg RedirectToLobby }
                     ]
 
                 ShoppingList shoppingList ->
@@ -219,7 +237,7 @@ view model =
                                 (\index { checked, name } ->
                                     View.shoppingListItem
                                         { checked = checked
-                                        , onCheck = CheckItem index
+                                        , onCheck = ShoppingListMsg (CheckItem index)
                                         , content = [ text name ]
                                         }
                                 )
@@ -253,6 +271,6 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.initializedWebnative
-            (Json.decodeValue Webnative.decoderState >> InitializedWebnative)
-        , Ports.wnfsResponse GotWnfsResponse
+            (Json.decodeValue Webnative.decoderState >> Initialized >> WebnativeMsg)
+        , Ports.wnfsResponse (GotResponse >> WebnativeMsg)
         ]
