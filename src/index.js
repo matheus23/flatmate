@@ -21,7 +21,7 @@ const app = Elm.Main.init({
 });
 
 app.ports.webnativeRequest.subscribe(() => console.log("port activated"))
-app.ports.log.subscribe(msg => console.log(msg))
+app.ports.log.subscribe(msg => console.log("Flatmate Elm:", msg))
 
 async function initializeWebnative() {
   try {

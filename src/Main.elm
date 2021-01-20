@@ -114,6 +114,9 @@ type WebnativeMsg
 
 type FileSystemAction
     = LoadedInitialState
+    | CheckedStateExists
+    | CreatedInitialState ShoppingListModel
+    | SavedState
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -190,18 +193,53 @@ updateWebnative msg model =
                             ( { model
                                 | page = ShoppingList initialState
                               }
-                            , Cmd.none
+                            , Ports.log "Loaded from existing state."
                             )
 
                         Err error ->
-                            ( { model
-                                | page = ShoppingList { items = [] }
-                              }
-                            , Ports.log ("Couldn't load state from wnfs:\n" ++ Json.errorToString error)
+                            ( model
+                            , Cmd.batch
+                                [ Ports.log
+                                    ("Couldn't load state from wnfs:\n"
+                                        ++ Json.errorToString error
+                                        ++ "\nOverwriting with a clean state."
+                                    )
+                                , createInitialState initShoppingList
+                                ]
                             )
 
                 Ok ( LoadedInitialState, _ ) ->
-                    ( model, Ports.log "incorrect response type for 'LoadedInitialState'" )
+                    ( model, Ports.log "unexpected response type for 'LoadedInitialState'" )
+
+                Ok ( CheckedStateExists, Wnfs.Boolean exists ) ->
+                    if exists then
+                        ( { model | page = Loading "Loading saved shopping list" }
+                        , loadInitialState
+                        )
+
+                    else
+                        ( { model | page = Loading "Creating initial shopping list" }
+                        , createInitialState initShoppingList
+                        )
+
+                Ok ( CheckedStateExists, _ ) ->
+                    ( model, Ports.log "unexpected response type for 'CheckedStateExists'" )
+
+                Ok ( SavedState, _ ) ->
+                    ( model
+                    , Cmd.batch
+                        [ Ports.log "saving current state in wnfs."
+                        , Wnfs.publish |> Ports.wnfsRequest
+                        ]
+                    )
+
+                Ok ( CreatedInitialState shoppingList, _ ) ->
+                    ( { model | page = ShoppingList shoppingList }
+                    , Cmd.batch
+                        [ Ports.log "Created initial state."
+                        , Wnfs.publish |> Ports.wnfsRequest
+                        ]
+                    )
 
                 Err errorMsg ->
                     ( model, Ports.log ("got an error from wnfs: " ++ errorMsg) )
@@ -209,12 +247,8 @@ updateWebnative msg model =
 
 authenticated : Model -> ( Model, Cmd Msg )
 authenticated model =
-    ( { model | page = Loading "Reading saved shopping list" }
-    , Wnfs.readUtf8 base
-        { path = [ "state.json" ]
-        , tag = Codec.encodeToString 0 codecFileSystemAction LoadedInitialState
-        }
-        |> Ports.wnfsRequest
+    ( { model | page = Loading "Looking for saved shopping list" }
+    , checkStateExists
     )
 
 
@@ -225,29 +259,67 @@ notAuthenticated model =
     )
 
 
+checkStateExists : Cmd Msg
+checkStateExists =
+    Wnfs.exists base
+        { path = [ "state.json" ]
+        , tag = Codec.encodeToString 0 codecFileSystemAction CheckedStateExists
+        }
+        |> Ports.wnfsRequest
+
+
+loadInitialState : Cmd Msg
+loadInitialState =
+    Wnfs.readUtf8 base
+        { path = [ "state.json" ]
+        , tag = Codec.encodeToString 0 codecFileSystemAction LoadedInitialState
+        }
+        |> Ports.wnfsRequest
+
+
+createInitialState : ShoppingListModel -> Cmd Msg
+createInitialState shoppingList =
+    Wnfs.writeUtf8 base
+        { path = [ "state.json" ]
+        , tag = Codec.encodeToString 0 codecFileSystemAction (CreatedInitialState shoppingList)
+        }
+        (Codec.encodeToString 4 codecShoppingListModel shoppingList)
+        |> Ports.wnfsRequest
+
+
+saveState : ShoppingListModel -> Cmd Msg
+saveState shoppingList =
+    Wnfs.writeUtf8 base
+        { path = [ "state.json" ]
+        , tag = Codec.encodeToString 0 codecFileSystemAction SavedState
+        }
+        (Codec.encodeToString 4 codecShoppingListModel shoppingList)
+        |> Ports.wnfsRequest
+
+
 updateShoppingList : ShoppingListMsg -> Model -> ( Model, Cmd Msg )
 updateShoppingList msg model =
     case model.page of
         ShoppingList shoppingList ->
             case msg of
                 CheckItem indexToToggle ->
-                    ( { model
-                        | page =
-                            ShoppingList
-                                { shoppingList
-                                    | items =
-                                        shoppingList.items
-                                            |> List.indexedMap
-                                                (\index item ->
-                                                    if index == indexToToggle then
-                                                        { item | checked = not item.checked }
+                    let
+                        newShoppingList =
+                            { shoppingList
+                                | items =
+                                    shoppingList.items
+                                        |> List.indexedMap
+                                            (\index item ->
+                                                if index == indexToToggle then
+                                                    { item | checked = not item.checked }
 
-                                                    else
-                                                        item
-                                                )
-                                }
-                      }
-                    , Cmd.none
+                                                else
+                                                    item
+                                            )
+                            }
+                    in
+                    ( { model | page = ShoppingList newShoppingList }
+                    , saveState newShoppingList
                     )
 
         _ ->
@@ -347,10 +419,22 @@ codecShoppingListModel =
 codecFileSystemAction : Codec FileSystemAction
 codecFileSystemAction =
     Codec.custom
-        (\cLoadedInitialState value ->
+        (\cLoadedInitialState cCheckedStateExists cCreatedInitialState cSavedState value ->
             case value of
                 LoadedInitialState ->
                     cLoadedInitialState
+
+                CheckedStateExists ->
+                    cCheckedStateExists
+
+                CreatedInitialState a ->
+                    cCreatedInitialState a
+
+                SavedState ->
+                    cSavedState
         )
         |> Codec.variant0 "LoadedInitialState" LoadedInitialState
+        |> Codec.variant0 "CheckedStateExists" CheckedStateExists
+        |> Codec.variant1 "CreatedInitialState" CreatedInitialState codecShoppingListModel
+        |> Codec.variant0 "SavedState" SavedState
         |> Codec.buildCustom
