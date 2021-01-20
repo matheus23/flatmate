@@ -27,7 +27,11 @@ type alias Model =
 type Page
     = Loading
     | SignIn
-    | ShoppingList
+    | ShoppingList ShoppingListModel
+
+
+type alias ShoppingListModel =
+    { items : List { checked : Bool, name : String } }
 
 
 type alias Flags =
@@ -46,6 +50,21 @@ init { randomness } =
       }
     , Cmd.none
     )
+
+
+initShoppingList : ShoppingListModel
+initShoppingList =
+    { items =
+        [ { checked = True, name = "Milk" }
+        , { checked = False, name = "Butter" }
+        , { checked = False, name = "Eggs" }
+        , { checked = True, name = "Screwdriver" }
+        , { checked = False, name = "Avocado" }
+        , { checked = True, name = "Cherries" }
+        , { checked = True, name = "This is a very, very, very long shopping list item. Why would anybody write this?" }
+        , { checked = False, name = "This is a very, very, very long shopping list item.     And it has lots of spaces :)" }
+        ]
+    }
 
 
 base : Wnfs.Base
@@ -131,7 +150,7 @@ update msg model =
 
 authenticated : Model -> ( Model, Cmd Msg )
 authenticated model =
-    ( { model | page = ShoppingList }
+    ( { model | page = ShoppingList initShoppingList }
     , Wnfs.ls base { path = appPath, tag = "LsAppPath" }
         |> Ports.wnfsRequest
     )
@@ -163,16 +182,14 @@ view model =
                         { onSignIn = RedirectToLobby }
                     ]
 
-                ShoppingList ->
+                ShoppingList shoppingList ->
                     View.appShell
-                        [ View.shoppingList
-                            [ View.shoppingListItem { checked = True, content = [ text "Milk" ] }
-                            , View.shoppingListItem { checked = False, content = [ text "Butter" ] }
-                            , View.shoppingListItem { checked = False, content = [ text "Eggs" ] }
-                            , View.shoppingListItem { checked = True, content = [ text "Screwdriver" ] }
-                            , View.shoppingListItem { checked = False, content = [ text "Avocado" ] }
-                            , View.shoppingListItem { checked = True, content = [ text "Cherries" ] }
-                            ]
+                        [ shoppingList.items
+                            |> List.indexedMap
+                                (\index { checked, name } ->
+                                    View.shoppingListItem { checked = checked, content = [ text name ] }
+                                )
+                            |> View.shoppingList
                         , View.shoppingListActions
                             [ View.shoppingListActionButton []
                                 { icon = FeatherIcons.trash2
