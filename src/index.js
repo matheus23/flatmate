@@ -3,6 +3,7 @@ import "./main.css";
 import { Elm } from "./Main.elm";
 import * as webnative from "webnative";
 import * as webnativeElm from "webnative-elm";
+import * as heartbeat from "./heartbeat.js";
 
 webnative.setup.debug({ enabled: true });
 
@@ -28,9 +29,11 @@ async function initializeWebnative() {
 
     const state = await webnative.initialise({ permissions });
 
+    let fs = state.fs;
+
     if (state.authenticated) {
       window.wn = state;
-      const fs = state.fs;
+      window.fs = fs;
 
       const appPath = fs.appPath();
       const appDirectoryExists = await fs.exists(appPath);
@@ -39,9 +42,26 @@ async function initializeWebnative() {
         await fs.mkdir(appPath);
         await fs.publish();
       }
+
+      heartbeat.start({
+        bpm: 30,
+        async onBeat() {
+          fs = await webnative.loadFileSystem(permissions, state.username)
+          window.fs = fs;
+          app.ports.heartbeat.send({})
+        }
+      })
     }
 
-    webnativeElm.setup(app, state.fs);
+    webnativeElm.setup(
+      app,
+      new Proxy({}, {
+        get: function (target, property, receiver) {
+          // Always use the most up to date filesystem for webnative-elm
+          return fs[property]
+        }
+      })
+    );
 
     app.ports.initializedWebnative.send(state);
 

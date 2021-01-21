@@ -95,6 +95,7 @@ appPath =
 
 type Msg
     = NoOp
+    | Heartbeat
     | ShoppingListMsg ShoppingListMsg
     | WebnativeMsg WebnativeMsg
       -- Url
@@ -126,6 +127,16 @@ update msg model =
         NoOp ->
             ( model
             , Cmd.none
+            )
+
+        Heartbeat ->
+            ( model
+            , case model.page of
+                ShoppingList _ ->
+                    reloadState
+
+                _ ->
+                    Cmd.none
             )
 
         ShoppingListMsg shoppingListMsg ->
@@ -424,6 +435,7 @@ subscriptions _ =
         [ Ports.initializedWebnative
             (Json.decodeValue Webnative.decoderState >> Initialized >> WebnativeMsg)
         , Ports.wnfsResponse (GotResponse >> WebnativeMsg)
+        , Ports.heartbeat (\_ -> Heartbeat)
         ]
 
 

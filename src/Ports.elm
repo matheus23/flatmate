@@ -10,6 +10,9 @@ port initializedWebnative : (Json.Value -> msg) -> Sub msg
 port log : String -> Cmd msg
 
 
+port heartbeat : ({} -> msg) -> Sub msg
+
+
 
 -- Webnative-Elm Ports
 
