@@ -43,14 +43,14 @@ async function initializeWebnative() {
         await fs.publish();
       }
 
-      heartbeat.start({
-        bpm: 30,
-        async onBeat() {
-          fs = await webnative.loadFileSystem(permissions, state.username)
-          window.fs = fs;
-          app.ports.heartbeat.send({})
-        }
-      })
+      // heartbeat.start({
+      //   bpm: 30,
+      //   async onBeat() {
+      //     fs = await webnative.loadFileSystem(permissions, state.username)
+      //     window.fs = fs;
+      //     app.ports.heartbeat.send({})
+      //   }
+      // })
     }
 
     webnativeElm.setup(
