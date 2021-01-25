@@ -6,6 +6,11 @@ module.exports = {
     mount: {
         "../src": "/",
     },
+    optimize: {
+        bundle: true,
+        minify: true,
+        target: 'es2018'
+    },
     plugins: [
         "snowpack-plugin-elm",
         // "./elm-tailwind-origami-plugin.js", // Shelved for now as for a lack of ESM support
