@@ -4,18 +4,19 @@
   "private": true,
   "scripts": {
     "start": "snowpack dev --config config/snowpack.js",
-    "build": "snowpack build --config config/snowpack.js",
-    "gen:tailwind": "node config/codegen.mjs"
+    "build": "snowpack build --config config/snowpack.js"
   },
   "devDependencies": {
     "autoprefixer": "^10.2.1",
     "elm": "latest-0.19.1",
     "elm-format": "^0.8.3",
-    "elm-tailwind-origami": "https://github.com/matheus23/elm-tailwind-origami.git#35a0d5fcfbde9c9c4f26617734bc77b556a27419",
+    "elm-tailwind-modules": "^0.2.0",
     "elm-tooling": "^1.0.2",
+    "path": "^0.12.7",
+    "postcss": "^8.2.5",
     "snowpack": "^3.0.10",
     "snowpack-plugin-elm": "^0.4.2",
-    "tailwindcss": "^2.0.2"
+    "tailwindcss": "^2.0.3"
   },
   "dependencies": {
     "webnative": "^0.21.2",

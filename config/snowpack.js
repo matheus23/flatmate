@@ -12,8 +12,14 @@ module.exports = {
         target: 'es2018'
     },
     plugins: [
+        ["./elm-tailwind-modules-snowpack.js", {
+            directory: "./gen",
+            moduleName: "Tailwind",
+            postcssPlugins: [require("autoprefixer")],
+            tailwindConfigPath: "./config/styles.tailwind.js",
+            verbose: true,
+        }],
         "snowpack-plugin-elm",
-        // "./elm-tailwind-origami-plugin.js", // Shelved for now as for a lack of ESM support
     ],
     packageOptions: {
         /* ... */

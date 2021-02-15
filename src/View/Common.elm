@@ -4,19 +4,18 @@ import Assets
 import Css
 import Css.Animations
 import Css.Global
-import Css.Media
 import FeatherIcons
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (alt, attribute, css, for, id, placeholder, src, style, title, type_, value)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
-import Tailwind exposing (..)
 import Tailwind.Breakpoints exposing (..)
+import Tailwind.Utilities exposing (..)
 
 
 globalStyles : List Css.Global.Snippet
 globalStyles =
-    List.append Tailwind.globalStyles
+    List.append Tailwind.Utilities.globalStyles
         [ Css.Global.selector "html"
             [ h_full
             , md
@@ -28,6 +27,7 @@ globalStyles =
             [ flex
             , flex_col
             , min_h_full
+            , h_full
             ]
         ]
 
@@ -38,6 +38,7 @@ desktopScaffolding content =
         [ css
             [ flex
             , flex_grow
+            , max_h_full
             ]
         ]
         [ Css.Global.global globalStyles
@@ -68,6 +69,7 @@ loadingScreen { message } =
             , items_center
             , space_y_5
             , m_auto
+            , overflow_hidden
             ]
         ]
         [ div
@@ -116,6 +118,7 @@ signinScreen { onSignIn } =
             , Css.backgroundSize Css.contain
             , Css.backgroundRepeat Css.noRepeat
             , space_y_8
+            , overflow_y_auto
             ]
         ]
         [ h1
@@ -179,6 +182,7 @@ appShell content =
             , px_5
             , flex
             , flex_row
+            , flex_shrink_0
             , h_16
             , items_center
             , backgroundImage Assets.headerCircle
@@ -205,6 +209,9 @@ appShell content =
             , px_8
             , py_8
             , space_y_8
+            , overflow_y_auto
+            , max_h_full
+            , relative
             ]
         ]
         content
@@ -214,7 +221,11 @@ appShell content =
 shoppingList : List (Html msg) -> Html msg
 shoppingList content =
     ul
-        [ css [ space_y_5 ] ]
+        [ css
+            [ space_y_5
+            , flex_shrink_0
+            ]
+        ]
         content
 
 
@@ -327,6 +338,33 @@ shoppingListItemAmount attributes amount =
         [ text amount ]
 
 
+shoppingListInput : List (Attribute msg) -> { onAdd : msg } -> Html msg
+shoppingListInput attributes { onAdd } =
+    form
+        (List.append attributes
+            [ Events.onSubmit onAdd
+            , css
+                [ flex
+                , flex_row
+                , flex_shrink_0
+                , flex_grow
+                , sticky
+                , bottom_0
+                ]
+            ]
+        )
+        [ div
+            [ css
+                [ bg_blue_600
+                , h_12
+                , w_full
+                , mt_auto
+                ]
+            ]
+            []
+        ]
+
+
 
 --
 
@@ -335,7 +373,8 @@ focusable : Css.Style
 focusable =
     Css.focus
         [ outline_none
-        , shadow_outline
+
+        -- , shadow_outline
         ]
 
 

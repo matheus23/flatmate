@@ -84,11 +84,6 @@ baseParams =
     }
 
 
-appPath : List String
-appPath =
-    [ "private", "Apps", baseParams.creator, baseParams.name ]
-
-
 
 ---- UPDATE ----
 
@@ -406,6 +401,8 @@ view model =
                                     , name = "Clear Checked"
                                     }
                                 ]
+                            , View.shoppingListInput []
+                                { onAdd = NoOp }
                             ]
                 )
             )

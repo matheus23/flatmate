@@ -19,7 +19,8 @@ module.exports = {
       colors: flatmateColors,
     }
   },
-  variants: {},
+  variants: [],
+  purge: false,
   corePlugins: {},
   plugins: [],
 };
