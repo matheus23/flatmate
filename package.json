@@ -10,7 +10,7 @@
     "autoprefixer": "^10.2.1",
     "elm": "latest-0.19.1",
     "elm-format": "^0.8.3",
-    "elm-tailwind-modules": "^0.2.0",
+    "elm-tailwind-modules": "^0.3.0",
     "elm-tooling": "^1.0.2",
     "path": "^0.12.7",
     "postcss": "^8.2.5",
@@ -19,7 +19,7 @@
     "tailwindcss": "^2.0.3"
   },
   "dependencies": {
-    "webnative": "^0.21.2",
+    "webnative": "^0.21.4",
     "webnative-elm": "^1.0.0"
   }
 }

@@ -23,6 +23,7 @@ module.exports = function (snowpackConfig, pluginOptions) {
             await elmTailwindModules.run({
                 directory: pluginOptions.directory,
                 moduleName: pluginOptions.moduleName,
+                generateDocumentation: pluginOptions.generateDocumentation,
                 postcssPlugins: pluginOptions.postcssPlugins,
                 tailwindConfig: this.tailwindConfig,
                 logFunction: msg => console.log(msg)

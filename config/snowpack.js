@@ -15,6 +15,7 @@ module.exports = {
         ["./elm-tailwind-modules-snowpack.js", {
             directory: "./gen",
             moduleName: "Tailwind",
+            generateDocumentation: true,
             postcssPlugins: [require("autoprefixer")],
             tailwindConfigPath: "./config/styles.tailwind.js",
             verbose: true,
