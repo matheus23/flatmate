@@ -44,16 +44,17 @@ desktopScaffolding content =
         [ Css.Global.global globalStyles
         , div
             [ css
-                [ flex
-                , flex_col
-                , flex_grow
-                , bg_white
-                , md
+                [ md
                     [ max_w_xl
                     , shadow_2xl
                     , mx_auto
                     , my_5
                     ]
+                , flex
+                , flex_col
+                , flex_grow
+                , bg_white
+                , relative
                 ]
             ]
             content
@@ -206,12 +207,14 @@ appShell content =
             [ flex_grow
             , flex
             , flex_col
-            , px_8
             , py_8
-            , space_y_8
+            , shoppingListInputMetrics.heightAsMB
             , overflow_y_auto
             , max_h_full
-            , relative
+            , Css.Global.children
+                [ Css.Global.everything
+                    [ flex_shrink_0 ]
+                ]
             ]
         ]
         content
@@ -223,7 +226,7 @@ shoppingList content =
     ul
         [ css
             [ space_y_5
-            , flex_shrink_0
+            , px_8
             ]
         ]
         content
@@ -237,6 +240,8 @@ shoppingListActions content =
             , flex_row
             , items_center
             , mx_auto
+            , mt_8
+            , px_8
             ]
         ]
         content
@@ -338,6 +343,13 @@ shoppingListItemAmount attributes amount =
         [ text amount ]
 
 
+shoppingListInputMetrics : { heightAsMB : Css.Style, height : Css.Style }
+shoppingListInputMetrics =
+    { heightAsMB = mb_12
+    , height = h_12
+    }
+
+
 shoppingListInput : List (Attribute msg) -> { onAdd : msg } -> Html msg
 shoppingListInput attributes { onAdd } =
     form
@@ -346,22 +358,32 @@ shoppingListInput attributes { onAdd } =
             , css
                 [ flex
                 , flex_row
-                , flex_shrink_0
-                , flex_grow
-                , sticky
+                , absolute
                 , bottom_0
+                , inset_x_0
                 ]
             ]
         )
         [ div
             [ css
-                [ bg_blue_600
-                , h_12
+                [ shoppingListInputMetrics.height
                 , w_full
-                , mt_auto
+                , bg_gradient_to_t
+                , from_white
+                , via_white
+                , to_transparent
                 ]
             ]
-            []
+            [ input
+                [ type_ "text"
+                , css
+                    [ bg_flatmate_100
+                    , h_8
+                    , w_full
+                    ]
+                ]
+                []
+            ]
         ]
 
 
