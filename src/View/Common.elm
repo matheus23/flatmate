@@ -239,11 +239,12 @@ shoppingListActions content =
         content
 
 
-shoppingListActionButton : List (Attribute msg) -> { icon : FeatherIcons.Icon, name : String } -> Html msg
-shoppingListActionButton attributes { icon, name } =
+shoppingListActionButton : List (Attribute msg) -> { icon : FeatherIcons.Icon, name : String, onClick : msg } -> Html msg
+shoppingListActionButton attributes element =
     button
         (List.append attributes
-            [ css
+            [ Events.onClick element.onClick
+            , css
                 [ flex
                 , flex_row
                 , font_base
@@ -266,7 +267,7 @@ shoppingListActionButton attributes { icon, name } =
                 ]
             ]
         )
-        [ icon
+        [ element.icon
             |> FeatherIcons.withSize 24
             |> wrapIcon
                 [ css
@@ -274,7 +275,7 @@ shoppingListActionButton attributes { icon, name } =
                     , mr_2
                     ]
                 ]
-        , text name
+        , text element.name
         ]
 
 
@@ -363,11 +364,18 @@ shoppingListInputSpacer =
         []
 
 
-shoppingListInput : List (Attribute msg) -> { onAdd : msg } -> Html msg
-shoppingListInput attributes { onAdd } =
+shoppingListInput :
+    List (Attribute msg)
+    ->
+        { onAdd : msg
+        , onInput : String -> msg
+        , value : String
+        }
+    -> Html msg
+shoppingListInput attributes element =
     form
         (List.append attributes
-            [ Events.onSubmit onAdd
+            [ Events.onSubmit element.onAdd
             , css
                 [ flex
                 , flex_row
@@ -396,6 +404,8 @@ shoppingListInput attributes { onAdd } =
         )
         [ input
             [ type_ "text"
+            , Events.onInput element.onInput
+            , value element.value
             , css
                 [ itemStyles.background
                 , itemStyles.font
@@ -409,7 +419,8 @@ shoppingListInput attributes { onAdd } =
             ]
             []
         , button
-            [ css
+            [ type_ "submit"
+            , css
                 [ doubleBorderedStyle
                 , h_12
                 , w_12

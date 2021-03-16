@@ -9,7 +9,7 @@ import Html.Styled exposing (text)
 import Json.Decode as Json
 import Ports
 import Random
-import UUID exposing (UUID)
+import UUID
 import Url exposing (Url)
 import View.Common as View
 import Webnative
@@ -35,7 +35,9 @@ type Page
 
 
 type alias ShoppingListModel =
-    { items : List { checked : Bool, name : String } }
+    { inputValue : String
+    , items : List { checked : Bool, name : String }
+    }
 
 
 type alias Flags =
@@ -69,6 +71,7 @@ initShoppingList =
         , { checked = True, name = "This is a very, very, very long shopping list item. Why would anybody write this?" }
         , { checked = False, name = "This is a very, very, very long shopping list item.     And it has lots of spaces :)" }
         ]
+    , inputValue = ""
     }
 
 
@@ -100,6 +103,9 @@ type Msg
 
 type ShoppingListMsg
     = CheckItem Int
+    | ClearCheckedClicked
+    | ShoppingListInputSubmitted
+    | ShoppingListInputChanged String
 
 
 type WebnativeMsg
@@ -358,6 +364,48 @@ updateShoppingList msg model =
                     , saveState newShoppingList
                     )
 
+                ClearCheckedClicked ->
+                    let
+                        newShoppingList =
+                            { shoppingList
+                                | items =
+                                    shoppingList.items
+                                        |> List.filter (not << .checked)
+                            }
+                    in
+                    ( { model | page = ShoppingList newShoppingList }
+                    , saveState newShoppingList
+                    )
+
+                ShoppingListInputSubmitted ->
+                    let
+                        trimmedValue =
+                            String.trim shoppingList.inputValue
+
+                        newShoppingList =
+                            { shoppingList
+                                | items =
+                                    shoppingList.items
+                                        ++ [ { name = trimmedValue
+                                             , checked = False
+                                             }
+                                           ]
+                                , inputValue = ""
+                            }
+                    in
+                    if String.isEmpty trimmedValue then
+                        ( model, Cmd.none )
+
+                    else
+                        ( { model | page = ShoppingList newShoppingList }
+                        , saveState newShoppingList
+                        )
+
+                ShoppingListInputChanged value ->
+                    ( { model | page = ShoppingList { shoppingList | inputValue = value } }
+                    , Cmd.none
+                    )
+
         _ ->
             ( model, Cmd.none )
 
@@ -399,11 +447,15 @@ view model =
                                 [ View.shoppingListActionButton []
                                     { icon = FeatherIcons.trash2
                                     , name = "Clear Checked"
+                                    , onClick = ShoppingListMsg ClearCheckedClicked
                                     }
                                 ]
                             , View.shoppingListInputSpacer
                             , View.shoppingListInput []
-                                { onAdd = NoOp }
+                                { onAdd = ShoppingListMsg ShoppingListInputSubmitted
+                                , onInput = ShoppingListMsg << ShoppingListInputChanged
+                                , value = shoppingList.inputValue
+                                }
                             ]
                 )
             )
@@ -443,7 +495,7 @@ subscriptions _ =
 
 codecShoppingListModel : Codec ShoppingListModel
 codecShoppingListModel =
-    Codec.object ShoppingListModel
+    Codec.object (ShoppingListModel "")
         |> Codec.field "items"
             .items
             (Codec.list
