@@ -7,19 +7,19 @@
     "build": "snowpack build --config config/snowpack.js"
   },
   "devDependencies": {
-    "autoprefixer": "^10.2.1",
-    "elm": "latest-0.19.1",
-    "elm-format": "^0.8.3",
+    "autoprefixer": "^10.2.5",
+    "elm": "0.19.1-5",
+    "elm-format": "^0.8.5",
     "elm-tailwind-modules": "^0.3.0",
-    "elm-tooling": "^1.0.2",
+    "elm-tooling": "^1.3.0",
     "path": "^0.12.7",
-    "postcss": "^8.2.5",
-    "snowpack": "^3.0.10",
+    "postcss": "^8.2.8",
+    "snowpack": "^3.0.13",
     "snowpack-plugin-elm": "^0.4.2",
     "tailwindcss": "^2.0.3"
   },
   "dependencies": {
     "webnative": "^0.21.4",
-    "webnative-elm": "^1.0.0"
+    "webnative-elm": "^4.0.0-3"
   }
 }
