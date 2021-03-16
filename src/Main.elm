@@ -401,6 +401,7 @@ view model =
                                     , name = "Clear Checked"
                                     }
                                 ]
+                            , View.shoppingListInputSpacer
                             , View.shoppingListInput []
                                 { onAdd = NoOp }
                             ]

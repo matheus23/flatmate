@@ -207,8 +207,7 @@ appShell content =
             [ flex_grow
             , flex
             , flex_col
-            , py_8
-            , shoppingListInputMetrics.heightAsMB
+            , pt_8
             , overflow_y_auto
             , max_h_full
             , Css.Global.children
@@ -343,11 +342,20 @@ shoppingListItemAmount attributes amount =
         [ text amount ]
 
 
-shoppingListInputMetrics : { heightAsMB : Css.Style, height : Css.Style }
-shoppingListInputMetrics =
-    { heightAsMB = mb_12
-    , height = h_12
-    }
+shoppingListInputHeight : Css.Style
+shoppingListInputHeight =
+    h_32
+
+
+shoppingListInputSpacer : Html msg
+shoppingListInputSpacer =
+    div
+        [ css
+            [ shoppingListInputHeight
+            , flex_shrink_0
+            ]
+        ]
+        []
 
 
 shoppingListInput : List (Attribute msg) -> { onAdd : msg } -> Html msg
@@ -358,32 +366,38 @@ shoppingListInput attributes { onAdd } =
             , css
                 [ flex
                 , flex_row
+                , items_center
+
+                -- Sizing
+                , w_full
+                , px_8
+
+                -- Positioning
                 , absolute
                 , bottom_0
                 , inset_x_0
+                , shoppingListInputHeight
+
+                -- Background
+                , Css.backgroundImage
+                    (Css.linearGradient2
+                        Css.toTop
+                        (Css.stop (Css.hex "fff"))
+                        (Css.stop2 (Css.hex "fff") (Css.pct 60))
+                        [ Css.stop (Css.rgba 255 255 255 0) ]
+                    )
                 ]
             ]
         )
-        [ div
-            [ css
-                [ shoppingListInputMetrics.height
+        [ input
+            [ type_ "text"
+            , css
+                [ bg_flatmate_100
+                , h_8
                 , w_full
-                , bg_gradient_to_t
-                , from_white
-                , via_white
-                , to_transparent
                 ]
             ]
-            [ input
-                [ type_ "text"
-                , css
-                    [ bg_flatmate_100
-                    , h_8
-                    , w_full
-                    ]
-                ]
-                []
-            ]
+            []
         ]
 
 
