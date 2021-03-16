@@ -5,6 +5,7 @@
 module.exports = {
     mount: {
         "../src": "/",
+        "../gen": "/",
     },
     optimize: {
         bundle: true,
@@ -20,10 +21,15 @@ module.exports = {
             tailwindConfigPath: "./config/styles.tailwind.js",
             verbose: true,
         }],
-        "snowpack-plugin-elm",
+        ["snowpack-plugin-elm", {
+            optimize: "build",
+            debugger: "dev",
+        }],
     ],
     packageOptions: {
-        /* ... */
+        knownEntrypoints: [
+            "src/index.js",
+        ],
     },
     devOptions: {
         open: "none", // Don't open a browser on start

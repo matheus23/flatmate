@@ -20,7 +20,4 @@ port heartbeat : ({} -> msg) -> Sub msg
 port webnativeRequest : Webnative.Request -> Cmd msg
 
 
-port wnfsRequest : Webnative.Request -> Cmd msg
-
-
-port wnfsResponse : (Webnative.Response -> msg) -> Sub msg
+port webnativeResponse : (Webnative.Response -> msg) -> Sub msg

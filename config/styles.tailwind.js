@@ -18,7 +18,8 @@ module.exports = {
     extend: {
       colors: flatmateColors,
       boxShadow: {
-        'double-bordered': `0 0 0 2px ${flatmateColors['flatmate-100']}, 0 0 0 4px ${flatmateColors['flatmate-300']}`
+        'flatmate-100-300': `0 0 0 2px ${flatmateColors['flatmate-100']}, 0 0 0 4px ${flatmateColors['flatmate-300']}`,
+        'flatmate-100-500': `0 0 0 2px ${flatmateColors['flatmate-100']}, 0 0 0 4px ${flatmateColors['flatmate-500']}`,
       },
     }
   },

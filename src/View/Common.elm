@@ -367,7 +367,7 @@ shoppingListInputSpacer =
 shoppingListInput :
     List (Attribute msg)
     ->
-        { onAdd : msg
+        { onSubmit : msg
         , onInput : String -> msg
         , value : String
         }
@@ -375,7 +375,7 @@ shoppingListInput :
 shoppingListInput attributes element =
     form
         (List.append attributes
-            [ Events.onSubmit element.onAdd
+            [ Events.onSubmit element.onSubmit
             , css
                 [ flex
                 , flex_row
@@ -463,8 +463,12 @@ doubleBorderedStyle =
     Css.batch
         [ rounded_full
         , bg_flatmate_300
+        , shadow_flatmate_100_300
+        , Css.active
+            [ bg_flatmate_500
+            , shadow_flatmate_100_500
+            ]
         , focusable
-        , shadow_double_bordered
         , ring_offset_4
         ]
 

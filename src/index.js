@@ -20,7 +20,6 @@ const app = Elm.Main.init({
   flags: { randomness: { r1: seed[1], r2: seed[2], r3: seed[3], r4: seed[4] } }
 });
 
-app.ports.webnativeRequest.subscribe(() => console.log("port activated"))
 app.ports.log.subscribe(msg => console.log("Flatmate Elm:", msg))
 
 async function initializeWebnative() {
@@ -52,15 +51,7 @@ async function initializeWebnative() {
       // })
     }
 
-    webnativeElm.setup(
-      app,
-      new Proxy({}, {
-        get: function (target, property, receiver) {
-          // Always use the most up to date filesystem for webnative-elm
-          return fs[property]
-        }
-      })
-    );
+    webnativeElm.setup(app, () => state.fs);
 
     app.ports.initializedWebnative.send(state);
 
@@ -73,7 +64,6 @@ async function initializeWebnative() {
 async function loadServiceWorker() {
   try {
     const registration = await navigator.serviceWorker.register('/sw.js');
-    registration.unregister();
     // used for native notifications. Best to call this when issuing the first notification
     // registration.pushManager.subscribe({ userVisibleOnly: true });
     console.log('SW registered: ', registration);
@@ -82,18 +72,5 @@ async function loadServiceWorker() {
   }
 }
 
+loadServiceWorker();
 initializeWebnative();
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', event => {
-    switch (event.data.type) {
-      case "log":
-        console.log(event.data.content);
-        break;
-    }
-  });
-
-  // window.addEventistener('load', loadServiceWorker);
-}
-window.loadServiceWorker = loadServiceWorker;
-window.webnative = webnative;

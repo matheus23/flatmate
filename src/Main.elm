@@ -13,7 +13,7 @@ import UUID
 import Url exposing (Url)
 import View.Common as View
 import Webnative
-import Webnative.Types as Webnative
+import Webnative.Types
 import Wnfs
 
 
@@ -61,16 +61,7 @@ init { randomness } _ navKey =
 
 initShoppingList : ShoppingListModel
 initShoppingList =
-    { items =
-        [ { checked = True, name = "Milk" }
-        , { checked = False, name = "Butter" }
-        , { checked = False, name = "Eggs" }
-        , { checked = True, name = "Screwdriver" }
-        , { checked = False, name = "Avocado" }
-        , { checked = True, name = "Cherries" }
-        , { checked = True, name = "This is a very, very, very long shopping list item. Why would anybody write this?" }
-        , { checked = False, name = "This is a very, very, very long shopping list item.     And it has lots of spaces :)" }
-        ]
+    { items = []
     , inputValue = ""
     }
 
@@ -110,7 +101,7 @@ type ShoppingListMsg
 
 type WebnativeMsg
     = RedirectToLobby
-    | Initialized (Result Json.Error Webnative.State)
+    | Initialized (Result Json.Error Webnative.Types.State)
     | GotResponse Webnative.Response
 
 
@@ -119,6 +110,7 @@ type FileSystemAction
     | CheckedStateExists
     | CreatedInitialState ShoppingListModel
     | SavedState
+    | PublishedState
     | ReloadedState
 
 
@@ -160,11 +152,9 @@ updateWebnative msg model =
             ( model
             , Cmd.batch
                 [ Webnative.redirectToLobby Webnative.CurrentUrl
-                    (Just
-                        { app = Just baseParams
-                        , fs = Nothing
-                        }
-                    )
+                    { app = Just baseParams
+                    , fs = Nothing
+                    }
                     |> Ports.webnativeRequest
                 ]
             )
@@ -179,28 +169,31 @@ updateWebnative msg model =
 
                 Ok state ->
                     case state of
-                        Webnative.NotAuthorised _ ->
+                        Webnative.Types.NotAuthorised _ ->
                             notAuthenticated model
 
-                        Webnative.AuthCancelled _ ->
+                        Webnative.Types.AuthCancelled _ ->
                             notAuthenticated model
 
-                        Webnative.AuthSucceeded _ ->
+                        Webnative.Types.AuthSucceeded _ ->
                             authenticated model
 
-                        Webnative.Continuation _ ->
+                        Webnative.Types.Continuation _ ->
                             authenticated model
 
         GotResponse response ->
             case
-                Wnfs.decodeResponse
+                Webnative.decodeResponse
                     (\tag ->
                         Codec.decodeString codecFileSystemAction tag
                             |> Result.mapError Json.errorToString
                     )
                     response
             of
-                Ok ( LoadedInitialState, Wnfs.Utf8Content stateJson ) ->
+                Webnative.Webnative _ ->
+                    ( model, Cmd.none )
+
+                Webnative.Wnfs LoadedInitialState (Wnfs.Utf8Content stateJson) ->
                     case Codec.decodeString codecShoppingListModel stateJson of
                         Ok initialState ->
                             ( { model
@@ -221,10 +214,10 @@ updateWebnative msg model =
                                 ]
                             )
 
-                Ok ( LoadedInitialState, _ ) ->
+                Webnative.Wnfs LoadedInitialState _ ->
                     ( model, Ports.log "unexpected response type for 'LoadedInitialState'" )
 
-                Ok ( CheckedStateExists, Wnfs.Boolean exists ) ->
+                Webnative.Wnfs CheckedStateExists (Wnfs.Boolean exists) ->
                     if exists then
                         ( { model | page = Loading "Loading saved shopping list" }
                         , loadInitialState
@@ -235,26 +228,35 @@ updateWebnative msg model =
                         , createInitialState initShoppingList
                         )
 
-                Ok ( CheckedStateExists, _ ) ->
-                    ( model, Ports.log "unexpected response type for 'CheckedStateExists'" )
+                Webnative.Wnfs CheckedStateExists _ ->
+                    ( model, Ports.log "Unexpected response type for 'CheckedStateExists'" )
 
-                Ok ( SavedState, _ ) ->
+                Webnative.Wnfs SavedState _ ->
                     ( model
                     , Cmd.batch
-                        [ Ports.log "saving current state in wnfs."
-                        , Wnfs.publish |> Ports.wnfsRequest
+                        [ Ports.log "Saving current state in wnfs."
+                        , Wnfs.publish
+                            { tag = Codec.encodeToString 0 codecFileSystemAction PublishedState }
+                            |> Ports.webnativeRequest
                         ]
                     )
 
-                Ok ( CreatedInitialState shoppingList, _ ) ->
+                Webnative.Wnfs PublishedState _ ->
+                    ( model
+                    , Ports.log "Published state."
+                    )
+
+                Webnative.Wnfs (CreatedInitialState shoppingList) _ ->
                     ( { model | page = ShoppingList shoppingList }
                     , Cmd.batch
                         [ Ports.log "Created initial state."
-                        , Wnfs.publish |> Ports.wnfsRequest
+                        , Wnfs.publish
+                            { tag = Codec.encodeToString 0 codecFileSystemAction PublishedState }
+                            |> Ports.webnativeRequest
                         ]
                     )
 
-                Ok ( ReloadedState, Wnfs.Utf8Content stateJson ) ->
+                Webnative.Wnfs ReloadedState (Wnfs.Utf8Content stateJson) ->
                     case Codec.decodeString codecShoppingListModel stateJson of
                         Ok state ->
                             ( { model
@@ -271,11 +273,14 @@ updateWebnative msg model =
                                 )
                             )
 
-                Ok ( ReloadedState, _ ) ->
+                Webnative.Wnfs ReloadedState _ ->
                     ( model, Ports.log "unexpected response type for 'ReloadedState'" )
 
-                Err errorMsg ->
-                    ( model, Ports.log ("got an error from wnfs: " ++ errorMsg) )
+                Webnative.WnfsError error ->
+                    ( model, Ports.log ("got an error from wnfs: " ++ Wnfs.error error) )
+
+                Webnative.WebnativeError error ->
+                    ( model, Ports.log ("got an error from webnative: " ++ Webnative.error error) )
 
 
 authenticated : Model -> ( Model, Cmd Msg )
@@ -298,7 +303,7 @@ checkStateExists =
         { path = [ "state.json" ]
         , tag = Codec.encodeToString 0 codecFileSystemAction CheckedStateExists
         }
-        |> Ports.wnfsRequest
+        |> Ports.webnativeRequest
 
 
 loadInitialState : Cmd Msg
@@ -307,7 +312,7 @@ loadInitialState =
         { path = [ "state.json" ]
         , tag = Codec.encodeToString 0 codecFileSystemAction LoadedInitialState
         }
-        |> Ports.wnfsRequest
+        |> Ports.webnativeRequest
 
 
 createInitialState : ShoppingListModel -> Cmd Msg
@@ -317,7 +322,7 @@ createInitialState shoppingList =
         , tag = Codec.encodeToString 0 codecFileSystemAction (CreatedInitialState shoppingList)
         }
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
-        |> Ports.wnfsRequest
+        |> Ports.webnativeRequest
 
 
 saveState : ShoppingListModel -> Cmd Msg
@@ -327,7 +332,7 @@ saveState shoppingList =
         , tag = Codec.encodeToString 0 codecFileSystemAction SavedState
         }
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
-        |> Ports.wnfsRequest
+        |> Ports.webnativeRequest
 
 
 reloadState : Cmd Msg
@@ -336,7 +341,7 @@ reloadState =
         { path = [ "state.json" ]
         , tag = Codec.encodeToString 0 codecFileSystemAction ReloadedState
         }
-        |> Ports.wnfsRequest
+        |> Ports.webnativeRequest
 
 
 updateShoppingList : ShoppingListMsg -> Model -> ( Model, Cmd Msg )
@@ -452,7 +457,7 @@ view model =
                                 ]
                             , View.shoppingListInputSpacer
                             , View.shoppingListInput []
-                                { onAdd = ShoppingListMsg ShoppingListInputSubmitted
+                                { onSubmit = ShoppingListMsg ShoppingListInputSubmitted
                                 , onInput = ShoppingListMsg << ShoppingListInputChanged
                                 , value = shoppingList.inputValue
                                 }
@@ -483,8 +488,8 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ Ports.initializedWebnative
-            (Json.decodeValue Webnative.decoderState >> Initialized >> WebnativeMsg)
-        , Ports.wnfsResponse (GotResponse >> WebnativeMsg)
+            (Json.decodeValue Webnative.Types.decoderState >> Initialized >> WebnativeMsg)
+        , Ports.webnativeResponse (GotResponse >> WebnativeMsg)
         , Ports.heartbeat (\_ -> Heartbeat)
         ]
 
@@ -511,7 +516,7 @@ codecShoppingListModel =
 codecFileSystemAction : Codec FileSystemAction
 codecFileSystemAction =
     Codec.custom
-        (\cLoadedInitialState cCheckedStateExists cCreatedInitialState cSavedState cReloadedState value ->
+        (\cLoadedInitialState cCheckedStateExists cCreatedInitialState cSavedState cPublishedState cReloadedState value ->
             case value of
                 LoadedInitialState ->
                     cLoadedInitialState
@@ -525,6 +530,9 @@ codecFileSystemAction =
                 SavedState ->
                     cSavedState
 
+                PublishedState ->
+                    cPublishedState
+
                 ReloadedState ->
                     cReloadedState
         )
@@ -532,5 +540,6 @@ codecFileSystemAction =
         |> Codec.variant0 "CheckedStateExists" CheckedStateExists
         |> Codec.variant1 "CreatedInitialState" CreatedInitialState codecShoppingListModel
         |> Codec.variant0 "SavedState" SavedState
+        |> Codec.variant0 "PublishedState" PublishedState
         |> Codec.variant0 "ReloadedState" ReloadedState
         |> Codec.buildCustom

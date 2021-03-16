@@ -1,6 +1,12 @@
 module.exports = {
+    cacheId: "matheus23/flatmate",
+    clientsClaim: true,
     globDirectory: "build/",
     globPatterns: ["**/*"],
-    swDest: "gen/sw.js",
-    swSrc: "src/sw.js",
+    inlineWorkboxRuntime: true,
+    navigateFallback: "index.html",
+    runtimeCaching: [],
+    skipWaiting: true,
+    sourcemap: false,
+    swDest: "build/sw.js",
 };

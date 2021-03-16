@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "snowpack dev --config config/snowpack.js",
-    "build": "snowpack build --config config/snowpack.js"
+    "build": "snowpack build --config config/snowpack.js && workbox generateSW config/workbox.config.js"
   },
   "devDependencies": {
     "autoprefixer": "^10.2.5",
@@ -16,7 +16,8 @@
     "postcss": "^8.2.8",
     "snowpack": "^3.0.13",
     "snowpack-plugin-elm": "^0.4.2",
-    "tailwindcss": "^2.0.3"
+    "tailwindcss": "^2.0.3",
+    "workbox-cli": "^6.1.2"
   },
   "dependencies": {
     "webnative": "^0.21.4",
