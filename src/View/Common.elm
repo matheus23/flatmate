@@ -5,6 +5,7 @@ import Css
 import Css.Animations
 import Css.Global
 import FeatherIcons
+import Html.Attributes
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (alt, attribute, css, for, id, placeholder, src, style, title, type_, value)
 import Html.Styled.Events as Events
@@ -147,28 +148,20 @@ signinScreen { onSignIn } =
                 ]
             ]
             [ text "Write shopping lists faster and never forget groceries! For you and your flatmates." ]
-        , doubleBordered button
-            { outer =
-                [ css
-                    [ mx_auto
-                    , flex
-                    , flex_row
-                    , focusable
-                    ]
-                , Events.onClick onSignIn
+        , button
+            [ css
+                [ doubleBorderedStyle
+                , mx_auto
+                , flex
+                , flex_row
+                , py_2
+                , px_4
+                , text_xl
+                , text_white
+                , font_base
                 ]
-            , inner =
-                [ css
-                    [ flex
-                    , flex_row
-                    , py_2
-                    , px_4
-                    , text_xl
-                    , text_white
-                    , font_base
-                    ]
-                ]
-            }
+            , Events.onClick onSignIn
+            ]
             [ img [ css [ w_5, mr_2 ], src (base64Data Assets.fissionLogoWhite) ] []
             , text "Sign in with Fission"
             ]
@@ -258,7 +251,7 @@ shoppingListActionButton attributes { icon, name } =
                 , py_2
                 , px_3
                 , rounded_lg
-                , Css.property "transition-property" "background-color"
+                , transition_colors
                 , border_2
                 , border_transparent
                 , duration_200
@@ -285,34 +278,45 @@ shoppingListActionButton attributes { icon, name } =
         ]
 
 
+itemStyles : { background : Css.Style, textColor : Css.Style, font : Css.Style, textSize : Css.Style, padding : Css.Style, height : Css.Style }
+itemStyles =
+    { background = bg_flatmate_100
+    , textColor = text_gray_900
+    , font = font_base
+    , textSize = text_xl
+    , padding = px_5
+    , height = Css.minHeight (Css.rem (24 / 16))
+    }
+
+
 shoppingListItem : { checked : Bool, onCheck : msg, content : List (Html msg) } -> Html msg
 shoppingListItem { checked, onCheck, content } =
     button
         [ css
-            [ Css.minHeight (Css.rem (24 / 16))
+            [ itemStyles.height
+            , itemStyles.padding
             , w_full
-            , px_5
             , text_left
             , focusable
 
             --
-            , cssWhen (not checked) [ bg_flatmate_100 ]
-            , transition
-            , duration_300
+            , cssWhen (not checked) [ itemStyles.background ]
+            , transition_colors
+            , duration_200
             ]
         , Events.onClick onCheck
         ]
         [ span
             [ css
-                [ font_base
-                , text_xl
+                [ itemStyles.font
+                , itemStyles.textSize
                 , flex
                 , flex_row
                 , whitespace_pre_wrap
 
                 --
                 , transition
-                , duration_300
+                , duration_200
                 , if checked then
                     Css.batch
                         [ text_gray_500
@@ -321,7 +325,7 @@ shoppingListItem { checked, onCheck, content } =
                         ]
 
                   else
-                    text_gray_900
+                    itemStyles.textColor
                 ]
             ]
             content
@@ -393,13 +397,37 @@ shoppingListInput attributes { onAdd } =
         [ input
             [ type_ "text"
             , css
-                [ bg_flatmate_100
-                , h_8
+                [ itemStyles.background
+                , itemStyles.font
+                , itemStyles.textColor
+                , itemStyles.textSize
+                , itemStyles.padding
+                , itemStyles.height
                 , w_full
                 , focusable
                 ]
             ]
             []
+        , button
+            [ css
+                [ doubleBorderedStyle
+                , h_12
+                , w_12
+                , text_flatmate_100
+                , flex_shrink_0
+                , flex
+                , flex_row
+                , items_center
+                ]
+            ]
+            [ FeatherIcons.plus
+                |> FeatherIcons.withSize 24
+                |> FeatherIcons.toHtml
+                    [ Html.Attributes.style "display" "inline"
+                    , Html.Attributes.style "margin" "auto"
+                    ]
+                |> fromUnstyled
+            ]
         ]
 
 
@@ -419,35 +447,14 @@ focusable =
         ]
 
 
-doubleBordered :
-    (List (Attribute msg) -> List (Html msg) -> Html msg)
-    ->
-        { outer : List (Attribute msg)
-        , inner : List (Attribute msg)
-        }
-    -> List (Html msg)
-    -> Html msg
-doubleBordered node attributes content =
-    node
-        (List.append attributes.outer
-            [ css
-                [ rounded_full
-                , bg_flatmate_300
-                , border_flatmate_300
-                , border_2
-                ]
-            ]
-        )
-        [ div
-            (List.append attributes.inner
-                [ css
-                    [ rounded_full
-                    , border_flatmate_100
-                    , border_2
-                    ]
-                ]
-            )
-            content
+doubleBorderedStyle : Css.Style
+doubleBorderedStyle =
+    Css.batch
+        [ rounded_full
+        , bg_flatmate_300
+        , focusable
+        , shadow_double_bordered
+        , ring_offset_4
         ]
 
 

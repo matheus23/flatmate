@@ -13,7 +13,7 @@ module.exports = function (snowpackConfig, pluginOptions) {
             if (isDev) {
                 console.log(`elm-tailwind-modules-plugin watches "${pluginOptions.tailwindConfigPath}".`);
                 fs.watchFile(this.tailwindConfigPath, async () => {
-                    console.log(`$"{pluginOptions.tailwindConfigPath}" changed, running elm-tailwind-modules.`);
+                    console.log(`"${pluginOptions.tailwindConfigPath}" changed, running elm-tailwind-modules.`);
                     await this.runCodegen();
                 });
             }
