@@ -266,7 +266,7 @@ shoppingListActionButton attributes { icon, name } =
                     [ bg_flatmate_100
                     , outline_none
                     , border_2
-                    , border_flatmate_200
+                    , border_flatmate_300
                     ]
                 , Css.active
                     [ bg_flatmate_200 ]
@@ -287,12 +287,13 @@ shoppingListActionButton attributes { icon, name } =
 
 shoppingListItem : { checked : Bool, onCheck : msg, content : List (Html msg) } -> Html msg
 shoppingListItem { checked, onCheck, content } =
-    div
+    button
         [ css
             [ Css.minHeight (Css.rem (24 / 16))
             , w_full
             , px_5
-            , select_none
+            , text_left
+            , focusable
 
             --
             , cssWhen (not checked) [ bg_flatmate_100 ]
@@ -395,6 +396,7 @@ shoppingListInput attributes { onAdd } =
                 [ bg_flatmate_100
                 , h_8
                 , w_full
+                , focusable
                 ]
             ]
             []
@@ -407,10 +409,13 @@ shoppingListInput attributes { onAdd } =
 
 focusable : Css.Style
 focusable =
-    Css.focus
-        [ outline_none
-
-        -- , shadow_outline
+    Css.batch
+        [ Css.focus [ outline_none ]
+        , Css.pseudoClass "focus-visible"
+            [ ring_2
+            , ring_opacity_80
+            , ring_flatmate_300
+            ]
         ]
 
 
