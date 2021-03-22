@@ -16,9 +16,7 @@ import UUID
 import Url exposing (Url)
 import View.Common as View
 import View.ShoppingList
-import Webnative
 import Webnative.Types
-import Wnfs
 
 
 
@@ -69,18 +67,6 @@ initShoppingList : ShoppingListModel
 initShoppingList =
     { items = []
     , inputValue = ""
-    }
-
-
-base : Wnfs.Base
-base =
-    Wnfs.AppData baseParams
-
-
-baseParams : { name : String, creator : String }
-baseParams =
-    { creator = "matheus23-test"
-    , name = "Flatmate"
     }
 
 
