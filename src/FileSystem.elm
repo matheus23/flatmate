@@ -1,4 +1,4 @@
-port module FileSystem exposing (exists, readUtf8)
+port module FileSystem exposing (exists, readUtf8, writeUtf8)
 
 import Json.Decode as D
 import Json.Encode as Json
@@ -16,7 +16,8 @@ exists path =
         (call
             { method = "exists"
             , args = [ Json.string path ]
-            , postprocess = None
+            , preprocess = []
+            , postprocess = Nothing
             }
             >> fsRequest
         )
@@ -32,7 +33,8 @@ readUtf8 path =
         (call
             { method = "read"
             , args = [ Json.string path ]
-            , postprocess = DecodeUtf8
+            , preprocess = []
+            , postprocess = Just DecodeUtf8
             }
             >> fsRequest
         )
@@ -42,17 +44,44 @@ readUtf8 path =
         |> Procedure.andThen (decodeResult D.string)
 
 
+writeUtf8 : String -> String -> Procedure String () msg
+writeUtf8 path content =
+    Channel.open
+        (call
+            { method = "write"
+            , args = [ Json.string path, Json.string content ]
+            , preprocess = [ ( 1, EncodeUtf8 ) ]
+            , postprocess = Just DecodeUtf8
+            }
+            >> fsRequest
+        )
+        |> Channel.connect fsResponse
+        |> Channel.filter hasSameKey
+        |> Channel.acceptOne
+        |> Procedure.andThen (decodeResult (D.succeed ()))
+
+
 
 -- Internal
 
 
+type Preprocess
+    = EncodeUtf8
+
+
 type Postprocess
     = DecodeUtf8
-    | None
 
 
-call : { method : String, args : List Json.Value, postprocess : Postprocess } -> ChannelKey -> Json.Value
-call { method, args, postprocess } key =
+call :
+    { method : String
+    , args : List Json.Value
+    , preprocess : List ( Int, Preprocess )
+    , postprocess : Maybe Postprocess
+    }
+    -> ChannelKey
+    -> Json.Value
+call { method, args, postprocess, preprocess } key =
     Json.object
         [ ( "key", Json.string key )
         , ( "call"
@@ -61,12 +90,26 @@ call { method, args, postprocess } key =
                 , ( "args", Json.list identity args )
                 ]
           )
+        , ( "preprocess"
+          , preprocess
+                |> Json.list
+                    (\( index, process ) ->
+                        Json.object
+                            [ ( "index", Json.int index )
+                            , ( "process"
+                              , case process of
+                                    EncodeUtf8 ->
+                                        Json.string "encodeUtf8"
+                              )
+                            ]
+                    )
+          )
         , ( "postprocess"
           , case postprocess of
-                DecodeUtf8 ->
+                Just DecodeUtf8 ->
                     Json.string "decodeUtf8"
 
-                None ->
+                Nothing ->
                     Json.null
           )
         ]

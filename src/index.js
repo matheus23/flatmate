@@ -56,9 +56,16 @@ async function initializeWebnative() {
     app.ports.fsRequest.subscribe(async request => {
       try {
         const key = request.key
+        const preprocess = request.preprocess
         const postprocess = request.postprocess
         const method = request.call.method
-        const args = request.call.args
+        let args = request.call.args
+
+        for (const { index, process } of preprocess) {
+          if (process === "encodeUtf8") {
+            args[index] = new TextEncoder().encode(args[index])
+          }
+        }
 
         let result = await fs[method].apply(fs, args)
 
