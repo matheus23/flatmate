@@ -1,4 +1,4 @@
-port module FileSystem exposing (exists, readUtf8, writeUtf8)
+port module FileSystem exposing (exists, publish, readUtf8, writeUtf8, CID)
 
 import Json.Decode as D
 import Json.Encode as Json
@@ -8,6 +8,10 @@ import Procedure.Channel as Channel exposing (ChannelKey)
 
 
 -- public API
+
+
+type alias CID =
+    String
 
 
 exists : String -> Procedure String Bool msg
@@ -59,6 +63,23 @@ writeUtf8 path content =
         |> Channel.filter hasSameKey
         |> Channel.acceptOne
         |> Procedure.andThen (decodeResult (D.succeed ()))
+
+
+publish : Procedure String CID msg
+publish =
+    Channel.open
+        (call
+            { method = "publish"
+            , args = []
+            , preprocess = []
+            , postprocess = Nothing
+            }
+            >> fsRequest
+        )
+        |> Channel.connect fsResponse
+        |> Channel.filter hasSameKey
+        |> Channel.acceptOne
+        |> Procedure.andThen (decodeResult D.string)
 
 
 

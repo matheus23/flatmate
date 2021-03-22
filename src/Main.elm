@@ -90,13 +90,15 @@ baseParams =
 
 type Msg
     = NoOp
+    | RedirectToLobby
+    | Initialized (Result Json.Error Webnative.Types.State)
     | Heartbeat
     | ShoppingListMsg ShoppingListMsg
-    | WebnativeMsg WebnativeMsg
     | StateJsonExists (Result String Bool)
     | LoadedInitialState (Result String String)
     | CreatedInitialState (Result String ShoppingListModel)
-    | SavedState (Result String ())
+    | SavedState (Result String FileSystem.CID)
+    | ReloadedState (Result String String)
       -- Url
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url
@@ -109,17 +111,6 @@ type ShoppingListMsg
     | ClearCheckedClicked
     | ShoppingListInputSubmitted
     | ShoppingListInputChanged String
-
-
-type WebnativeMsg
-    = RedirectToLobby
-    | Initialized (Result Json.Error Webnative.Types.State)
-    | GotResponse Webnative.Response
-
-
-type FileSystemAction
-    = PublishedState
-    | ReloadedState
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -143,8 +134,31 @@ update msg model =
         ShoppingListMsg shoppingListMsg ->
             updateShoppingList shoppingListMsg model
 
-        WebnativeMsg webnativeMsg ->
-            updateWebnative webnativeMsg model
+        RedirectToLobby ->
+            ( model
+            , Ports.redirectToLobby ()
+            )
+
+        Initialized result ->
+            case result of
+                Err error ->
+                    ( model
+                    , Ports.log ("Error during webnative initialisation: " ++ Json.errorToString error)
+                    )
+
+                Ok state ->
+                    case state of
+                        Webnative.Types.NotAuthorised _ ->
+                            notAuthenticated model
+
+                        Webnative.Types.AuthCancelled _ ->
+                            notAuthenticated model
+
+                        Webnative.Types.AuthSucceeded _ ->
+                            authenticated model
+
+                        Webnative.Types.Continuation _ ->
+                            authenticated model
 
         StateJsonExists result ->
             case result of
@@ -199,12 +213,7 @@ update msg model =
             case result of
                 Ok shoppingList ->
                     ( { model | page = ShoppingList shoppingList }
-                    , Cmd.batch
-                        [ Ports.log "Created initial state."
-                        , Wnfs.publish
-                            { tag = Codec.encodeToString 0 codecFileSystemAction PublishedState }
-                            |> Ports.webnativeRequest
-                        ]
+                    , Ports.log "Created initial state."
                     )
 
                 Err error ->
@@ -214,14 +223,9 @@ update msg model =
 
         SavedState result ->
             case result of
-                Ok () ->
+                Ok _ ->
                     ( model
-                    , Cmd.batch
-                        [ Ports.log "Saving current state in wnfs."
-                        , Wnfs.publish
-                            { tag = Codec.encodeToString 0 codecFileSystemAction PublishedState }
-                            |> Ports.webnativeRequest
-                        ]
+                    , Ports.log "Saving current state in wnfs."
                     )
 
                 Err error ->
@@ -229,71 +233,9 @@ update msg model =
                     , Ports.log ("Error during SavedState: " ++ error)
                     )
 
-        UrlRequest _ ->
-            ( model, Cmd.none )
-
-        UrlChanged _ ->
-            ( model, Cmd.none )
-
-        ProcedureMsg procedureMsg ->
-            Procedure.Program.update procedureMsg model.procedureModel
-                |> Tuple.mapFirst (\procedureModel -> { model | procedureModel = procedureModel })
-
-
-updateWebnative : WebnativeMsg -> Model -> ( Model, Cmd Msg )
-updateWebnative msg model =
-    case msg of
-        RedirectToLobby ->
-            ( model
-            , Cmd.batch
-                [ Webnative.redirectToLobby Webnative.CurrentUrl
-                    { app = Just baseParams
-                    , fs = Nothing
-                    }
-                    |> Ports.webnativeRequest
-                ]
-            )
-
-        Initialized result ->
+        ReloadedState result ->
             case result of
-                Err _ ->
-                    -- TODO Errors
-                    ( model
-                    , Cmd.none
-                    )
-
-                Ok state ->
-                    case state of
-                        Webnative.Types.NotAuthorised _ ->
-                            notAuthenticated model
-
-                        Webnative.Types.AuthCancelled _ ->
-                            notAuthenticated model
-
-                        Webnative.Types.AuthSucceeded _ ->
-                            authenticated model
-
-                        Webnative.Types.Continuation _ ->
-                            authenticated model
-
-        GotResponse response ->
-            case
-                Webnative.decodeResponse
-                    (\tag ->
-                        Codec.decodeString codecFileSystemAction tag
-                            |> Result.mapError Json.errorToString
-                    )
-                    response
-            of
-                Webnative.Webnative _ ->
-                    ( model, Cmd.none )
-
-                Webnative.Wnfs PublishedState _ ->
-                    ( model
-                    , Ports.log "Published state."
-                    )
-
-                Webnative.Wnfs ReloadedState (Wnfs.Utf8Content stateJson) ->
+                Ok stateJson ->
                     case Codec.decodeString codecShoppingListModel stateJson of
                         Ok state ->
                             ( { model
@@ -310,14 +252,20 @@ updateWebnative msg model =
                                 )
                             )
 
-                Webnative.Wnfs ReloadedState _ ->
-                    ( model, Ports.log "unexpected response type for 'ReloadedState'" )
+                Err error ->
+                    ( model
+                    , Ports.log ("Error during ReloadedState: " ++ error)
+                    )
 
-                Webnative.WnfsError error ->
-                    ( model, Ports.log ("got an error from wnfs: " ++ Wnfs.error error) )
+        UrlRequest _ ->
+            ( model, Cmd.none )
 
-                Webnative.WebnativeError error ->
-                    ( model, Ports.log ("got an error from webnative: " ++ Webnative.error error) )
+        UrlChanged _ ->
+            ( model, Cmd.none )
+
+        ProcedureMsg procedureMsg ->
+            Procedure.Program.update procedureMsg model.procedureModel
+                |> Tuple.mapFirst (\procedureModel -> { model | procedureModel = procedureModel })
 
 
 authenticated : Model -> ( Model, Cmd Msg )
@@ -339,6 +287,7 @@ createInitialState : ShoppingListModel -> Cmd Msg
 createInitialState shoppingList =
     FileSystem.writeUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
+        |> Procedure.andThen (\_ -> FileSystem.publish)
         |> Procedure.try ProcedureMsg (Result.map (\_ -> shoppingList) >> CreatedInitialState)
 
 
@@ -346,16 +295,14 @@ saveState : ShoppingListModel -> Cmd Msg
 saveState shoppingList =
     FileSystem.writeUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
+        |> Procedure.andThen (\_ -> FileSystem.publish)
         |> Procedure.try ProcedureMsg SavedState
 
 
 reloadState : Cmd Msg
 reloadState =
-    Wnfs.readUtf8 base
-        { path = [ "state.json" ]
-        , tag = Codec.encodeToString 0 codecFileSystemAction ReloadedState
-        }
-        |> Ports.webnativeRequest
+    FileSystem.readUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
+        |> Procedure.try ProcedureMsg ReloadedState
 
 
 updateShoppingList : ShoppingListMsg -> Model -> ( Model, Cmd Msg )
@@ -447,7 +394,7 @@ view model =
 
                     SignIn ->
                         [ View.signinScreen
-                            { onSignIn = WebnativeMsg RedirectToLobby }
+                            { onSignIn = RedirectToLobby }
                         ]
 
                     ShoppingList shoppingList ->
@@ -511,8 +458,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Ports.initializedWebnative
-            (Json.decodeValue Webnative.Types.decoderState >> Initialized >> WebnativeMsg)
-        , Ports.webnativeResponse (GotResponse >> WebnativeMsg)
+            (Json.decodeValue Webnative.Types.decoderState >> Initialized)
         , Ports.heartbeat (\_ -> Heartbeat)
         , Procedure.Program.subscriptions model.procedureModel
         ]
@@ -535,19 +481,3 @@ codecShoppingListModel =
                 )
             )
         |> Codec.buildObject
-
-
-codecFileSystemAction : Codec FileSystemAction
-codecFileSystemAction =
-    Codec.custom
-        (\cPublishedState cReloadedState value ->
-            case value of
-                PublishedState ->
-                    cPublishedState
-
-                ReloadedState ->
-                    cReloadedState
-        )
-        |> Codec.variant0 "PublishedState" PublishedState
-        |> Codec.variant0 "ReloadedState" ReloadedState
-        |> Codec.buildCustom

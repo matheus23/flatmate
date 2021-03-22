@@ -1,7 +1,6 @@
 import "./main.css";
 import { Elm } from "./Main.elm";
 import * as webnative from "webnative";
-import * as webnativeElm from "webnative-elm";
 // import * as heartbeat from "./heartbeat.js";
 
 webnative.setup.debug({ enabled: true });
@@ -21,6 +20,9 @@ const app = Elm.Main.init({
 });
 
 app.ports.log.subscribe(msg => console.log("Flatmate Elm:", msg))
+app.ports.redirectToLobby.subscribe(async () => {
+  await webnative.redirectToLobby(permissions)
+})
 
 async function initializeWebnative() {
   try {
@@ -50,8 +52,6 @@ async function initializeWebnative() {
       //   }
       // })
     }
-
-    webnativeElm.setup(app, () => state.fs);
 
     app.ports.fsRequest.subscribe(async request => {
       const key = request.key
