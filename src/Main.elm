@@ -151,7 +151,8 @@ update msg model =
                 Ok exists ->
                     if exists then
                         ( { model | page = Loading "Loading saved shopping list" }
-                        , loadInitialState
+                        , FileSystem.readUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
+                            |> Procedure.try ProcedureMsg LoadedInitialState
                         )
 
                     else
@@ -306,7 +307,8 @@ updateWebnative msg model =
 authenticated : Model -> ( Model, Cmd Msg )
 authenticated model =
     ( { model | page = Loading "Looking for saved shopping list" }
-    , checkStateExists
+    , FileSystem.exists "private/Apps/matheus23-test/Flatmate/state.json"
+        |> Procedure.try ProcedureMsg StateJsonExists
     )
 
 
@@ -315,18 +317,6 @@ notAuthenticated model =
     ( { model | page = SignIn }
     , Cmd.none
     )
-
-
-checkStateExists : Cmd Msg
-checkStateExists =
-    FileSystem.exists "private/Apps/matheus23-test/Flatmate/state.json"
-        |> Procedure.try ProcedureMsg StateJsonExists
-
-
-loadInitialState : Cmd Msg
-loadInitialState =
-    FileSystem.readUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
-        |> Procedure.try ProcedureMsg LoadedInitialState
 
 
 createInitialState : ShoppingListModel -> Cmd Msg
