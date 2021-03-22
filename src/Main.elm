@@ -439,23 +439,32 @@ view model =
 
                     ShoppingList shoppingList ->
                         View.appShell
-                            [ shoppingList.items
-                                |> List.indexedMap
-                                    (\index { checked, name } ->
-                                        View.ShoppingList.item
-                                            { checked = checked
-                                            , onCheck = ShoppingListMsg (CheckItem index)
-                                            , content = [ text name ]
-                                            }
-                                    )
-                                |> View.ShoppingList.view
+                            [ if List.isEmpty shoppingList.items then
+                                View.ShoppingList.emptyState
+
+                              else
+                                shoppingList.items
+                                    |> List.indexedMap
+                                        (\index { checked, name } ->
+                                            View.ShoppingList.item
+                                                { checked = checked
+                                                , onCheck = ShoppingListMsg (CheckItem index)
+                                                , content = [ text name ]
+                                                }
+                                        )
+                                    |> View.ShoppingList.view
                             , View.ShoppingList.actions
-                                [ View.ShoppingList.actionButton []
-                                    { icon = FeatherIcons.trash2
-                                    , name = "Clear Checked"
-                                    , onClick = ShoppingListMsg ClearCheckedClicked
-                                    }
-                                ]
+                                (if List.isEmpty shoppingList.items then
+                                    []
+
+                                 else
+                                    [ View.ShoppingList.actionButton []
+                                        { icon = FeatherIcons.trash2
+                                        , name = "Clear Checked"
+                                        , onClick = ShoppingListMsg ClearCheckedClicked
+                                        }
+                                    ]
+                                )
                             , View.ShoppingList.itemInputSpacer
                             , View.ShoppingList.itemInput []
                                 { onSubmit = ShoppingListMsg ShoppingListInputSubmitted

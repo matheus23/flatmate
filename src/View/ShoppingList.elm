@@ -23,6 +23,36 @@ view content =
         content
 
 
+emptyState : Html msg
+emptyState =
+    div
+        [ css
+            [ flex
+            , flex_col
+            , items_center
+            , Css.height (Css.rem (400 / 16))
+            ]
+        ]
+        [ View.Common.icon
+            [ css
+                [ text_flatmate_500
+                , mt_auto
+                ]
+            ]
+            { icon = FeatherIcons.checkCircle
+            , sizePx = 64
+            }
+        , span
+            [ css
+                [ mt_8
+                , mb_auto
+                , text_flatmate_400
+                ]
+            ]
+            [ text "All done! All shopping list items checked off." ]
+        ]
+
+
 actions : List (Html msg) -> Html msg
 actions content =
     div
@@ -66,14 +96,15 @@ actionButton attributes element =
                 ]
             ]
         )
-        [ element.icon
-            |> FeatherIcons.withSize 24
-            |> View.Common.wrapIcon
-                [ css
-                    [ text_gray_700
-                    , mr_2
-                    ]
+        [ View.Common.icon
+            [ css
+                [ text_gray_700
+                , mr_2
                 ]
+            ]
+            { icon = element.icon
+            , sizePx = 24
+            }
         , text element.name
         ]
 

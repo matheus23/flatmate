@@ -259,9 +259,11 @@ base64Data base64encodedSvg =
     "data:image/svg+xml;base64," ++ base64encodedSvg
 
 
-wrapIcon : List (Attribute msg) -> FeatherIcons.Icon -> Html msg
-wrapIcon attributes icon =
-    icon
+icon : List (Attribute msg) -> { sizePx : Float, icon : FeatherIcons.Icon } -> Html msg
+icon attributes element =
+    element.icon
+        |> FeatherIcons.withSize (element.sizePx / 16)
+        |> FeatherIcons.withSizeUnit "rem"
         |> FeatherIcons.toHtml []
         |> fromUnstyled
         |> List.singleton
