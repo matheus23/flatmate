@@ -8,6 +8,7 @@ import Html
 import Html.Styled exposing (text)
 import Json.Decode as Json
 import Ports
+import Procedure.Program
 import Random
 import UUID
 import Url exposing (Url)
@@ -26,6 +27,7 @@ type alias Model =
     { uuidSeeds : UUID.Seeds
     , navKey : Navigation.Key
     , page : Page
+    , procedureModel : Procedure.Program.Model Msg
     }
 
 
@@ -55,6 +57,7 @@ init { randomness } _ navKey =
             }
       , navKey = navKey
       , page = Loading "Trying to log in..."
+      , procedureModel = Procedure.Program.init
       }
     , Cmd.none
     )
@@ -91,6 +94,8 @@ type Msg
       -- Url
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url
+      -- elm-procedure
+    | ProcedureMsg (Procedure.Program.Msg Msg)
 
 
 type ShoppingListMsg
@@ -144,6 +149,10 @@ update msg model =
 
         UrlChanged _ ->
             ( model, Cmd.none )
+
+        ProcedureMsg procedureMsg ->
+            Procedure.Program.update procedureMsg model.procedureModel
+                |> Tuple.mapFirst (\procedureModel -> { model | procedureModel = procedureModel })
 
 
 updateWebnative : WebnativeMsg -> Model -> ( Model, Cmd Msg )
@@ -495,12 +504,13 @@ main =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
+subscriptions model =
     Sub.batch
         [ Ports.initializedWebnative
             (Json.decodeValue Webnative.Types.decoderState >> Initialized >> WebnativeMsg)
         , Ports.webnativeResponse (GotResponse >> WebnativeMsg)
         , Ports.heartbeat (\_ -> Heartbeat)
+        , Procedure.Program.subscriptions model.procedureModel
         ]
 
 
