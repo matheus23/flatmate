@@ -96,6 +96,7 @@ type Msg
     | StateJsonExists (Result String Bool)
     | LoadedInitialState (Result String String)
     | CreatedInitialState (Result String ShoppingListModel)
+    | SavedState (Result String ())
       -- Url
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url
@@ -117,8 +118,7 @@ type WebnativeMsg
 
 
 type FileSystemAction
-    = SavedState
-    | PublishedState
+    = PublishedState
     | ReloadedState
 
 
@@ -180,9 +180,11 @@ update msg model =
                             ( model
                             , Cmd.batch
                                 [ Ports.log
-                                    ("Couldn't load state from wnfs:\n"
-                                        ++ Json.errorToString error
-                                        ++ "\nOverwriting with a clean state."
+                                    (String.join "\n"
+                                        [ "Couldn't load state from wnfs:"
+                                        , Json.errorToString error
+                                        , "Overwriting with a clean state."
+                                        ]
                                     )
                                 , createInitialState initShoppingList
                                 ]
@@ -208,6 +210,23 @@ update msg model =
                 Err error ->
                     ( model
                     , Ports.log ("Error during CreatedInitialState: " ++ error)
+                    )
+
+        SavedState result ->
+            case result of
+                Ok () ->
+                    ( model
+                    , Cmd.batch
+                        [ Ports.log "Saving current state in wnfs."
+                        , Wnfs.publish
+                            { tag = Codec.encodeToString 0 codecFileSystemAction PublishedState }
+                            |> Ports.webnativeRequest
+                        ]
+                    )
+
+                Err error ->
+                    ( model
+                    , Ports.log ("Error during SavedState: " ++ error)
                     )
 
         UrlRequest _ ->
@@ -269,16 +288,6 @@ updateWebnative msg model =
                 Webnative.Webnative _ ->
                     ( model, Cmd.none )
 
-                Webnative.Wnfs SavedState _ ->
-                    ( model
-                    , Cmd.batch
-                        [ Ports.log "Saving current state in wnfs."
-                        , Wnfs.publish
-                            { tag = Codec.encodeToString 0 codecFileSystemAction PublishedState }
-                            |> Ports.webnativeRequest
-                        ]
-                    )
-
                 Webnative.Wnfs PublishedState _ ->
                     ( model
                     , Ports.log "Published state."
@@ -335,12 +344,9 @@ createInitialState shoppingList =
 
 saveState : ShoppingListModel -> Cmd Msg
 saveState shoppingList =
-    Wnfs.writeUtf8 base
-        { path = [ "state.json" ]
-        , tag = Codec.encodeToString 0 codecFileSystemAction SavedState
-        }
+    FileSystem.writeUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
-        |> Ports.webnativeRequest
+        |> Procedure.try ProcedureMsg SavedState
 
 
 reloadState : Cmd Msg
@@ -534,18 +540,14 @@ codecShoppingListModel =
 codecFileSystemAction : Codec FileSystemAction
 codecFileSystemAction =
     Codec.custom
-        (\cSavedState cPublishedState cReloadedState value ->
+        (\cPublishedState cReloadedState value ->
             case value of
-                SavedState ->
-                    cSavedState
-
                 PublishedState ->
                     cPublishedState
 
                 ReloadedState ->
                     cReloadedState
         )
-        |> Codec.variant0 "SavedState" SavedState
         |> Codec.variant0 "PublishedState" PublishedState
         |> Codec.variant0 "ReloadedState" ReloadedState
         |> Codec.buildCustom
