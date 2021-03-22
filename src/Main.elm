@@ -12,6 +12,7 @@ import Random
 import UUID
 import Url exposing (Url)
 import View.Common as View
+import View.ShoppingList
 import Webnative
 import Webnative.Types
 import Wnfs
@@ -441,22 +442,22 @@ view model =
                             [ shoppingList.items
                                 |> List.indexedMap
                                     (\index { checked, name } ->
-                                        View.shoppingListItem
+                                        View.ShoppingList.item
                                             { checked = checked
                                             , onCheck = ShoppingListMsg (CheckItem index)
                                             , content = [ text name ]
                                             }
                                     )
-                                |> View.shoppingList
-                            , View.shoppingListActions
-                                [ View.shoppingListActionButton []
+                                |> View.ShoppingList.view
+                            , View.ShoppingList.actions
+                                [ View.ShoppingList.actionButton []
                                     { icon = FeatherIcons.trash2
                                     , name = "Clear Checked"
                                     , onClick = ShoppingListMsg ClearCheckedClicked
                                     }
                                 ]
-                            , View.shoppingListInputSpacer
-                            , View.shoppingListInput []
+                            , View.ShoppingList.itemInputSpacer
+                            , View.ShoppingList.itemInput []
                                 { onSubmit = ShoppingListMsg ShoppingListInputSubmitted
                                 , onInput = ShoppingListMsg << ShoppingListInputChanged
                                 , value = shoppingList.inputValue

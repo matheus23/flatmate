@@ -27,9 +27,6 @@ module.exports = {
         }],
     ],
     packageOptions: {
-        knownEntrypoints: [
-            "src/index.js",
-        ],
     },
     devOptions: {
         open: "none", // Don't open a browser on start
