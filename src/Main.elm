@@ -94,6 +94,7 @@ type Msg
     | ShoppingListMsg ShoppingListMsg
     | WebnativeMsg WebnativeMsg
     | StateJsonExists (Result String Bool)
+    | LoadedInitialState (Result String String)
       -- Url
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url
@@ -115,8 +116,7 @@ type WebnativeMsg
 
 
 type FileSystemAction
-    = LoadedInitialState
-    | CreatedInitialState ShoppingListModel
+    = CreatedInitialState ShoppingListModel
     | SavedState
     | PublishedState
     | ReloadedState
@@ -161,7 +161,35 @@ update msg model =
 
                 Err error ->
                     ( model
-                    , Ports.log ("Unexpected response type for StateJsonExists: " ++ error)
+                    , Ports.log ("Error during StateJsonExists: " ++ error)
+                    )
+
+        LoadedInitialState result ->
+            case result of
+                Ok stateJson ->
+                    case Codec.decodeString codecShoppingListModel stateJson of
+                        Ok initialState ->
+                            ( { model
+                                | page = ShoppingList initialState
+                              }
+                            , Ports.log "Loaded from existing state."
+                            )
+
+                        Err error ->
+                            ( model
+                            , Cmd.batch
+                                [ Ports.log
+                                    ("Couldn't load state from wnfs:\n"
+                                        ++ Json.errorToString error
+                                        ++ "\nOverwriting with a clean state."
+                                    )
+                                , createInitialState initShoppingList
+                                ]
+                            )
+
+                Err error ->
+                    ( model
+                    , Ports.log ("Error during LoadedInitialState: " ++ error)
                     )
 
         UrlRequest _ ->
@@ -222,30 +250,6 @@ updateWebnative msg model =
             of
                 Webnative.Webnative _ ->
                     ( model, Cmd.none )
-
-                Webnative.Wnfs LoadedInitialState (Wnfs.Utf8Content stateJson) ->
-                    case Codec.decodeString codecShoppingListModel stateJson of
-                        Ok initialState ->
-                            ( { model
-                                | page = ShoppingList initialState
-                              }
-                            , Ports.log "Loaded from existing state."
-                            )
-
-                        Err error ->
-                            ( model
-                            , Cmd.batch
-                                [ Ports.log
-                                    ("Couldn't load state from wnfs:\n"
-                                        ++ Json.errorToString error
-                                        ++ "\nOverwriting with a clean state."
-                                    )
-                                , createInitialState initShoppingList
-                                ]
-                            )
-
-                Webnative.Wnfs LoadedInitialState _ ->
-                    ( model, Ports.log "unexpected response type for 'LoadedInitialState'" )
 
                 Webnative.Wnfs SavedState _ ->
                     ( model
@@ -321,11 +325,8 @@ checkStateExists =
 
 loadInitialState : Cmd Msg
 loadInitialState =
-    Wnfs.readUtf8 base
-        { path = [ "state.json" ]
-        , tag = Codec.encodeToString 0 codecFileSystemAction LoadedInitialState
-        }
-        |> Ports.webnativeRequest
+    FileSystem.readUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
+        |> Procedure.try ProcedureMsg LoadedInitialState
 
 
 createInitialState : ShoppingListModel -> Cmd Msg
@@ -539,11 +540,8 @@ codecShoppingListModel =
 codecFileSystemAction : Codec FileSystemAction
 codecFileSystemAction =
     Codec.custom
-        (\cLoadedInitialState cCreatedInitialState cSavedState cPublishedState cReloadedState value ->
+        (\cCreatedInitialState cSavedState cPublishedState cReloadedState value ->
             case value of
-                LoadedInitialState ->
-                    cLoadedInitialState
-
                 CreatedInitialState a ->
                     cCreatedInitialState a
 
@@ -556,7 +554,6 @@ codecFileSystemAction =
                 ReloadedState ->
                     cReloadedState
         )
-        |> Codec.variant0 "LoadedInitialState" LoadedInitialState
         |> Codec.variant1 "CreatedInitialState" CreatedInitialState codecShoppingListModel
         |> Codec.variant0 "SavedState" SavedState
         |> Codec.variant0 "PublishedState" PublishedState

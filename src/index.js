@@ -58,7 +58,10 @@ async function initializeWebnative() {
         const key = request.key
         const method = request.call.method
         const args = request.call.args
-        const result = await fs[method].apply(fs, args)
+        let result = await fs[method].apply(fs, args)
+        if (result instanceof Uint8Array) {
+          result = new TextDecoder().decode(result)
+        }
         app.ports.fsResponse.send({ key, result })
       } catch (err) {
         app.ports.fsResponse.send({ key, error: typeof err.message === "string" ? err.message : "Unknown Error" })

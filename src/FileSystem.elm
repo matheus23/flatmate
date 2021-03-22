@@ -1,4 +1,4 @@
-port module FileSystem exposing (exists)
+port module FileSystem exposing (exists, readUtf8)
 
 import Json.Decode as D
 import Json.Encode as Json
@@ -18,6 +18,16 @@ exists path =
         |> Channel.filter hasSameKey
         |> Channel.acceptOne
         |> Procedure.andThen (decodeResult D.bool)
+
+
+readUtf8 : String -> Procedure String String msg
+readUtf8 path =
+    Channel.open
+        (call "read" [ Json.string path ] >> fsRequest)
+        |> Channel.connect fsResponse
+        |> Channel.filter hasSameKey
+        |> Channel.acceptOne
+        |> Procedure.andThen (decodeResult D.string)
 
 
 
