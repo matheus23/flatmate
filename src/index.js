@@ -54,11 +54,15 @@ async function initializeWebnative() {
     webnativeElm.setup(app, () => state.fs);
 
     app.ports.fsRequest.subscribe(async request => {
-      const key = request.key
-      const method = request.call.method
-      const args = request.call.args
-      const result = await fs[method].apply(fs, args)
-      app.ports.fsResponse.send({ key, result })
+      try {
+        const key = request.key
+        const method = request.call.method
+        const args = request.call.args
+        const result = await fs[method].apply(fs, args)
+        app.ports.fsResponse.send({ key, result })
+      } catch (err) {
+        app.ports.fsResponse.send({ key, error: typeof err.message === "string" ? err.message : "Unknown Error" })
+      }
     })
 
     app.ports.initializedWebnative.send(state);

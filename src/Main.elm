@@ -93,7 +93,7 @@ type Msg
     | Heartbeat
     | ShoppingListMsg ShoppingListMsg
     | WebnativeMsg WebnativeMsg
-    | StateJsonExists (Result Json.Error Bool)
+    | StateJsonExists (Result String Bool)
       -- Url
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url
@@ -161,7 +161,7 @@ update msg model =
 
                 Err error ->
                     ( model
-                    , Ports.log ("Unexpected response type for StateJsonExists: " ++ Json.errorToString error)
+                    , Ports.log ("Unexpected response type for StateJsonExists: " ++ error)
                     )
 
         UrlRequest _ ->
