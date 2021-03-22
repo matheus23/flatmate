@@ -54,8 +54,8 @@ async function initializeWebnative() {
     webnativeElm.setup(app, () => state.fs);
 
     app.ports.fsRequest.subscribe(async request => {
+      const key = request.key
       try {
-        const key = request.key
         const preprocess = request.preprocess
         const postprocess = request.postprocess
         const method = request.call.method

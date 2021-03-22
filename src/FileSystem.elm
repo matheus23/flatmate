@@ -51,7 +51,7 @@ writeUtf8 path content =
             { method = "write"
             , args = [ Json.string path, Json.string content ]
             , preprocess = [ ( 1, EncodeUtf8 ) ]
-            , postprocess = Just DecodeUtf8
+            , postprocess = Nothing
             }
             >> fsRequest
         )
