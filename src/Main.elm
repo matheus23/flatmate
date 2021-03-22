@@ -4,10 +4,12 @@ import Browser
 import Browser.Navigation as Navigation
 import Codec exposing (Codec)
 import FeatherIcons
+import FileSystem
 import Html
 import Html.Styled exposing (text)
 import Json.Decode as Json
 import Ports
+import Procedure
 import Procedure.Program
 import Random
 import UUID
@@ -91,6 +93,7 @@ type Msg
     | Heartbeat
     | ShoppingListMsg ShoppingListMsg
     | WebnativeMsg WebnativeMsg
+    | StateJsonExists (Result Json.Error Bool)
       -- Url
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url
@@ -113,7 +116,6 @@ type WebnativeMsg
 
 type FileSystemAction
     = LoadedInitialState
-    | CheckedStateExists
     | CreatedInitialState ShoppingListModel
     | SavedState
     | PublishedState
@@ -143,6 +145,24 @@ update msg model =
 
         WebnativeMsg webnativeMsg ->
             updateWebnative webnativeMsg model
+
+        StateJsonExists result ->
+            case result of
+                Ok exists ->
+                    if exists then
+                        ( { model | page = Loading "Loading saved shopping list" }
+                        , loadInitialState
+                        )
+
+                    else
+                        ( { model | page = Loading "Creating initial shopping list" }
+                        , createInitialState initShoppingList
+                        )
+
+                Err error ->
+                    ( model
+                    , Ports.log ("Unexpected response type for StateJsonExists: " ++ Json.errorToString error)
+                    )
 
         UrlRequest _ ->
             ( model, Cmd.none )
@@ -227,20 +247,6 @@ updateWebnative msg model =
                 Webnative.Wnfs LoadedInitialState _ ->
                     ( model, Ports.log "unexpected response type for 'LoadedInitialState'" )
 
-                Webnative.Wnfs CheckedStateExists (Wnfs.Boolean exists) ->
-                    if exists then
-                        ( { model | page = Loading "Loading saved shopping list" }
-                        , loadInitialState
-                        )
-
-                    else
-                        ( { model | page = Loading "Creating initial shopping list" }
-                        , createInitialState initShoppingList
-                        )
-
-                Webnative.Wnfs CheckedStateExists _ ->
-                    ( model, Ports.log "Unexpected response type for 'CheckedStateExists'" )
-
                 Webnative.Wnfs SavedState _ ->
                     ( model
                     , Cmd.batch
@@ -309,11 +315,8 @@ notAuthenticated model =
 
 checkStateExists : Cmd Msg
 checkStateExists =
-    Wnfs.exists base
-        { path = [ "state.json" ]
-        , tag = Codec.encodeToString 0 codecFileSystemAction CheckedStateExists
-        }
-        |> Ports.webnativeRequest
+    FileSystem.exists "private/Apps/matheus23-test/Flatmate/state.json"
+        |> Procedure.try ProcedureMsg StateJsonExists
 
 
 loadInitialState : Cmd Msg
@@ -536,13 +539,10 @@ codecShoppingListModel =
 codecFileSystemAction : Codec FileSystemAction
 codecFileSystemAction =
     Codec.custom
-        (\cLoadedInitialState cCheckedStateExists cCreatedInitialState cSavedState cPublishedState cReloadedState value ->
+        (\cLoadedInitialState cCreatedInitialState cSavedState cPublishedState cReloadedState value ->
             case value of
                 LoadedInitialState ->
                     cLoadedInitialState
-
-                CheckedStateExists ->
-                    cCheckedStateExists
 
                 CreatedInitialState a ->
                     cCreatedInitialState a
@@ -557,7 +557,6 @@ codecFileSystemAction =
                     cReloadedState
         )
         |> Codec.variant0 "LoadedInitialState" LoadedInitialState
-        |> Codec.variant0 "CheckedStateExists" CheckedStateExists
         |> Codec.variant1 "CreatedInitialState" CreatedInitialState codecShoppingListModel
         |> Codec.variant0 "SavedState" SavedState
         |> Codec.variant0 "PublishedState" PublishedState
