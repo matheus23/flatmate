@@ -95,6 +95,7 @@ type Msg
     | WebnativeMsg WebnativeMsg
     | StateJsonExists (Result String Bool)
     | LoadedInitialState (Result String String)
+    | CreatedInitialState (Result String ShoppingListModel)
       -- Url
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url
@@ -116,8 +117,7 @@ type WebnativeMsg
 
 
 type FileSystemAction
-    = CreatedInitialState ShoppingListModel
-    | SavedState
+    = SavedState
     | PublishedState
     | ReloadedState
 
@@ -191,6 +191,23 @@ update msg model =
                 Err error ->
                     ( model
                     , Ports.log ("Error during LoadedInitialState: " ++ error)
+                    )
+
+        CreatedInitialState result ->
+            case result of
+                Ok shoppingList ->
+                    ( { model | page = ShoppingList shoppingList }
+                    , Cmd.batch
+                        [ Ports.log "Created initial state."
+                        , Wnfs.publish
+                            { tag = Codec.encodeToString 0 codecFileSystemAction PublishedState }
+                            |> Ports.webnativeRequest
+                        ]
+                    )
+
+                Err error ->
+                    ( model
+                    , Ports.log ("Error during CreatedInitialState: " ++ error)
                     )
 
         UrlRequest _ ->
@@ -267,16 +284,6 @@ updateWebnative msg model =
                     , Ports.log "Published state."
                     )
 
-                Webnative.Wnfs (CreatedInitialState shoppingList) _ ->
-                    ( { model | page = ShoppingList shoppingList }
-                    , Cmd.batch
-                        [ Ports.log "Created initial state."
-                        , Wnfs.publish
-                            { tag = Codec.encodeToString 0 codecFileSystemAction PublishedState }
-                            |> Ports.webnativeRequest
-                        ]
-                    )
-
                 Webnative.Wnfs ReloadedState (Wnfs.Utf8Content stateJson) ->
                     case Codec.decodeString codecShoppingListModel stateJson of
                         Ok state ->
@@ -321,12 +328,9 @@ notAuthenticated model =
 
 createInitialState : ShoppingListModel -> Cmd Msg
 createInitialState shoppingList =
-    Wnfs.writeUtf8 base
-        { path = [ "state.json" ]
-        , tag = Codec.encodeToString 0 codecFileSystemAction (CreatedInitialState shoppingList)
-        }
+    FileSystem.writeUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
-        |> Ports.webnativeRequest
+        |> Procedure.try ProcedureMsg (Result.map (\_ -> shoppingList) >> CreatedInitialState)
 
 
 saveState : ShoppingListModel -> Cmd Msg
@@ -530,11 +534,8 @@ codecShoppingListModel =
 codecFileSystemAction : Codec FileSystemAction
 codecFileSystemAction =
     Codec.custom
-        (\cCreatedInitialState cSavedState cPublishedState cReloadedState value ->
+        (\cSavedState cPublishedState cReloadedState value ->
             case value of
-                CreatedInitialState a ->
-                    cCreatedInitialState a
-
                 SavedState ->
                     cSavedState
 
@@ -544,7 +545,6 @@ codecFileSystemAction =
                 ReloadedState ->
                     cReloadedState
         )
-        |> Codec.variant1 "CreatedInitialState" CreatedInitialState codecShoppingListModel
         |> Codec.variant0 "SavedState" SavedState
         |> Codec.variant0 "PublishedState" PublishedState
         |> Codec.variant0 "ReloadedState" ReloadedState
