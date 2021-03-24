@@ -1,4 +1,4 @@
-port module FileSystem exposing (exists, publish, readUtf8, writeUtf8, CID)
+port module FileSystem exposing (CID, exists, publish, readUtf8, writeUtf8)
 
 import Json.Decode as D
 import Json.Encode as Json

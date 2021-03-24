@@ -5,13 +5,13 @@ import Browser.Navigation as Navigation
 import Codec exposing (Codec)
 import FeatherIcons
 import FileSystem
-import Html
 import Html.Styled exposing (text)
 import Json.Decode as Json
 import Ports
 import Procedure
 import Procedure.Program
 import Random
+import ShoppingList
 import UUID
 import Url exposing (Url)
 import View.Common as View
@@ -39,7 +39,7 @@ type Page
 
 type alias ShoppingListModel =
     { inputValue : String
-    , items : List { checked : Bool, name : String }
+    , list : ShoppingList.Items
     }
 
 
@@ -65,7 +65,7 @@ init { randomness } _ navKey =
 
 initShoppingList : ShoppingListModel
 initShoppingList =
-    { items = []
+    { list = ShoppingList.empty
     , inputValue = ""
     }
 
@@ -93,7 +93,7 @@ type Msg
 
 
 type ShoppingListMsg
-    = CheckItem Int
+    = CheckItem ShoppingList.ItemHash
     | ClearCheckedClicked
     | ShoppingListInputSubmitted
     | ShoppingListInputChanged String
@@ -296,20 +296,17 @@ updateShoppingList msg model =
     case model.page of
         ShoppingList shoppingList ->
             case msg of
-                CheckItem indexToToggle ->
+                CheckItem itemHash ->
                     let
                         newShoppingList =
                             { shoppingList
-                                | items =
-                                    shoppingList.items
-                                        |> List.indexedMap
-                                            (\index item ->
-                                                if index == indexToToggle then
-                                                    { item | checked = not item.checked }
-
-                                                else
-                                                    item
-                                            )
+                                | list =
+                                    ShoppingList.update
+                                        (\item ->
+                                            { item | checked = not item.checked }
+                                        )
+                                        itemHash
+                                        shoppingList.list
                             }
                     in
                     ( { model | page = ShoppingList newShoppingList }
@@ -320,9 +317,16 @@ updateShoppingList msg model =
                     let
                         newShoppingList =
                             { shoppingList
-                                | items =
-                                    shoppingList.items
-                                        |> List.filter (not << .checked)
+                                | list =
+                                    ShoppingList.map
+                                        (\item ->
+                                            if item.checked then
+                                                { item | removed = True }
+
+                                            else
+                                                item
+                                        )
+                                        shoppingList.list
                             }
                     in
                     ( { model | page = ShoppingList newShoppingList }
@@ -336,12 +340,13 @@ updateShoppingList msg model =
 
                         newShoppingList =
                             { shoppingList
-                                | items =
-                                    shoppingList.items
-                                        ++ [ { name = trimmedValue
-                                             , checked = False
-                                             }
-                                           ]
+                                | list =
+                                    shoppingList.list
+                                        |> ShoppingList.insertAtEnd
+                                            { name = trimmedValue
+                                            , checked = False
+                                            , removed = False
+                                            }
                                 , inputValue = ""
                             }
                     in
@@ -384,23 +389,31 @@ view model =
                         ]
 
                     ShoppingList shoppingList ->
+                        let
+                            renderedShoppingListItems =
+                                shoppingList.list
+                                    |> ShoppingList.traverse
+                                        (\item ->
+                                            if item.removed then
+                                                []
+
+                                            else
+                                                [ View.ShoppingList.item
+                                                    { checked = item.checked
+                                                    , onCheck = ShoppingListMsg (CheckItem (ShoppingList.hash item))
+                                                    , content = [ text item.name ]
+                                                    }
+                                                ]
+                                        )
+                        in
                         View.appShell
-                            [ if List.isEmpty shoppingList.items then
+                            [ if List.isEmpty renderedShoppingListItems then
                                 View.ShoppingList.emptyState
 
                               else
-                                shoppingList.items
-                                    |> List.indexedMap
-                                        (\index { checked, name } ->
-                                            View.ShoppingList.item
-                                                { checked = checked
-                                                , onCheck = ShoppingListMsg (CheckItem index)
-                                                , content = [ text name ]
-                                                }
-                                        )
-                                    |> View.ShoppingList.view
+                                View.ShoppingList.view renderedShoppingListItems
                             , View.ShoppingList.actions
-                                (if List.isEmpty shoppingList.items then
+                                (if List.isEmpty renderedShoppingListItems then
                                     []
 
                                  else
@@ -456,7 +469,53 @@ subscriptions model =
 
 codecShoppingListModel : Codec ShoppingListModel
 codecShoppingListModel =
+    Codec.oneOf
+        codecShoppingListModelV2
+        [ codecShoppingListModelV1
+            -- Convert old format to new format and vice versa
+            |> Codec.map
+                (\{ items } ->
+                    { inputValue = ""
+                    , list =
+                        List.foldl
+                            (\item list ->
+                                list
+                                    |> ShoppingList.insertAtEnd
+                                        { name = item.name
+                                        , checked = item.checked
+                                        , removed = False
+                                        }
+                            )
+                            ShoppingList.empty
+                            items
+                    }
+                )
+                (\shoppingListModel ->
+                    { items =
+                        shoppingListModel.list
+                            |> ShoppingList.traverse
+                                (\item ->
+                                    if item.removed then
+                                        []
+
+                                    else
+                                        [ { checked = item.checked, name = item.name } ]
+                                )
+                    }
+                )
+        ]
+
+
+codecShoppingListModelV2 : Codec ShoppingListModel
+codecShoppingListModelV2 =
     Codec.object (ShoppingListModel "")
+        |> Codec.field "list" .list ShoppingList.codec
+        |> Codec.buildObject
+
+
+codecShoppingListModelV1 : Codec { items : List { checked : Bool, name : String } }
+codecShoppingListModelV1 =
+    Codec.object (\items -> { items = items })
         |> Codec.field "items"
             .items
             (Codec.list

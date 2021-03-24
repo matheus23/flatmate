@@ -4,6 +4,7 @@ import * as webnative from "webnative";
 // import * as heartbeat from "./heartbeat.js";
 
 webnative.setup.debug({ enabled: true });
+window.webnative = webnative
 
 const seed = new Uint32Array(10);
 window.crypto.getRandomValues(seed);

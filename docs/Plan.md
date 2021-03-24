@@ -15,7 +15,7 @@
   - What happens with item renames?
 * [ ] Progressive login.
 
-* [ ] Identify elements by Hash
+* [X] Identify elements by Hash
 * [ ] Publish only via button press
 * [ ] Record an event log
 * [ ] Before publishing, test whether the head diverged
