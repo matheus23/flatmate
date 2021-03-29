@@ -4,9 +4,10 @@ import Css
 import FeatherIcons
 import Html.Attributes
 import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (alt, attribute, css, for, id, placeholder, src, style, title, type_, value)
+import Html.Styled.Attributes exposing (alt, attribute, classList, css, disabled, for, id, placeholder, property, src, style, title, type_, value)
 import Html.Styled.Events as Events
 import Html.Styled.Keyed as Keyed
+import Json.Encode as E
 import Tailwind.Breakpoints exposing (..)
 import Tailwind.Utilities exposing (..)
 import View.Common
@@ -270,3 +271,33 @@ itemInput attributes element =
                 |> fromUnstyled
             ]
         ]
+
+
+headerIcon : { icon : FeatherIcons.Icon, disabled : Bool, styles : List Css.Style } -> Html msg
+headerIcon element =
+    element.icon
+        |> FeatherIcons.withSize 24
+        |> FeatherIcons.toHtml []
+        |> fromUnstyled
+        |> List.singleton
+        |> button
+            [ disabled element.disabled
+            , property "disabled" (E.bool element.disabled)
+            , css
+                [ Css.batch element.styles
+                , Css.disabled
+                    [ text_flatmate_300 ]
+                , Css.hover
+                    [ bg_flatmate_100
+                    , bg_opacity_50
+                    ]
+                , Css.active
+                    [ transform_gpu
+                    , scale_90
+                    ]
+                , rounded_full
+                , text_flatmate_700
+                , p_3
+                , View.Common.focusable
+                ]
+            ]

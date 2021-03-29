@@ -5,7 +5,6 @@ import Css
 import Css.Animations
 import Css.Global
 import FeatherIcons
-import Html.Attributes
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (alt, attribute, css, for, id, placeholder, src, style, title, type_, value)
 import Html.Styled.Events as Events
@@ -168,33 +167,38 @@ signinScreen { onSignIn } =
         ]
 
 
-appShell : List (Html msg) -> List (Html msg)
-appShell content =
+appShell : { headerIcons : List (Html msg), main : List (Html msg) } -> List (Html msg)
+appShell element =
     [ header
         [ css
             [ bg_flatmate_200
             , px_5
+            , h_16
             , flex
             , flex_row
             , flex_shrink_0
-            , h_16
             , items_center
+            , space_x_2
             , backgroundImage Assets.headerCircle
             , Css.backgroundRepeat Css.noRepeat
             , border_flatmate_300
             , shadow_lg
             ]
         ]
-        [ h1
-            [ css
-                [ text_white
-                , text_3xl
-                , font_bold
-                , font_base
+        (List.append
+            [ h1
+                [ css
+                    [ text_white
+                    , text_3xl
+                    , font_bold
+                    , font_base
+                    , mr_auto
+                    ]
                 ]
+                [ text "Flatmate" ]
             ]
-            [ text "Flatmate" ]
-        ]
+            element.headerIcons
+        )
     , main_
         [ css
             [ flex_grow
@@ -209,7 +213,7 @@ appShell content =
                 ]
             ]
         ]
-        content
+        element.main
     ]
 
 

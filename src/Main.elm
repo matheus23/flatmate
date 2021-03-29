@@ -12,6 +12,7 @@ import Procedure
 import Procedure.Program
 import Random
 import ShoppingList
+import Tailwind.Utilities
 import UUID
 import Url exposing (Url)
 import View.Common as View
@@ -407,30 +408,44 @@ view model =
                                         )
                         in
                         View.appShell
-                            [ if List.isEmpty renderedShoppingListItems then
-                                View.ShoppingList.emptyState
+                            { headerIcons =
+                                [ View.ShoppingList.headerIcon
+                                    { icon = FeatherIcons.uploadCloud
+                                    , disabled = True
+                                    , styles = []
+                                    }
+                                , View.ShoppingList.headerIcon
+                                    { icon = FeatherIcons.refreshCw
+                                    , disabled = False
+                                    , styles = [ Tailwind.Utilities.animate_spin ]
+                                    }
+                                ]
+                            , main =
+                                [ if List.isEmpty renderedShoppingListItems then
+                                    View.ShoppingList.emptyState
 
-                              else
-                                View.ShoppingList.view renderedShoppingListItems
-                            , View.ShoppingList.actions
-                                (if List.isEmpty renderedShoppingListItems then
-                                    []
+                                  else
+                                    View.ShoppingList.view renderedShoppingListItems
+                                , View.ShoppingList.actions
+                                    (if List.isEmpty renderedShoppingListItems then
+                                        []
 
-                                 else
-                                    [ View.ShoppingList.actionButton []
-                                        { icon = FeatherIcons.trash2
-                                        , name = "Clear Checked"
-                                        , onClick = ShoppingListMsg ClearCheckedClicked
-                                        }
-                                    ]
-                                )
-                            , View.ShoppingList.itemInputSpacer
-                            , View.ShoppingList.itemInput []
-                                { onSubmit = ShoppingListMsg ShoppingListInputSubmitted
-                                , onInput = ShoppingListMsg << ShoppingListInputChanged
-                                , value = shoppingList.inputValue
-                                }
-                            ]
+                                     else
+                                        [ View.ShoppingList.actionButton []
+                                            { icon = FeatherIcons.trash2
+                                            , name = "Clear Checked"
+                                            , onClick = ShoppingListMsg ClearCheckedClicked
+                                            }
+                                        ]
+                                    )
+                                , View.ShoppingList.itemInputSpacer
+                                , View.ShoppingList.itemInput []
+                                    { onSubmit = ShoppingListMsg ShoppingListInputSubmitted
+                                    , onInput = ShoppingListMsg << ShoppingListInputChanged
+                                    , value = shoppingList.inputValue
+                                    }
+                                ]
+                            }
                 )
             )
         ]
