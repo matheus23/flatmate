@@ -10,6 +10,3 @@ port redirectToLobby : () -> Cmd msg
 
 
 port log : String -> Cmd msg
-
-
-port heartbeat : ({} -> msg) -> Sub msg

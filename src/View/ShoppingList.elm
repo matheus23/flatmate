@@ -273,7 +273,7 @@ itemInput attributes element =
         ]
 
 
-headerIcon : { icon : FeatherIcons.Icon, disabled : Bool, styles : List Css.Style } -> Html msg
+headerIcon : { icon : FeatherIcons.Icon, onClick : msg, disabled : Bool, styles : List Css.Style } -> Html msg
 headerIcon element =
     element.icon
         |> FeatherIcons.withSize 24
@@ -283,6 +283,7 @@ headerIcon element =
         |> button
             [ disabled element.disabled
             , property "disabled" (E.bool element.disabled)
+            , Events.onClick element.onClick
             , css
                 [ Css.batch element.styles
                 , Css.disabled

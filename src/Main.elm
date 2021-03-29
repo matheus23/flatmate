@@ -29,6 +29,8 @@ type alias Model =
     , navKey : Navigation.Key
     , page : Page
     , procedureModel : Procedure.Program.Model Msg
+    , isPublishing : Bool
+    , isDirty : Bool
     }
 
 
@@ -59,6 +61,8 @@ init { randomness } _ navKey =
       , navKey = navKey
       , page = Loading "Trying to log in..."
       , procedureModel = Procedure.Program.init
+      , isPublishing = False
+      , isDirty = False
       }
     , Cmd.none
     )
@@ -84,8 +88,10 @@ type Msg
     | StateJsonExists (Result String Bool)
     | LoadedInitialState (Result String String)
     | CreatedInitialState (Result String ShoppingListModel)
-    | SavedState (Result String FileSystem.CID)
+    | SavedState (Result String ())
     | ReloadedState (Result String String)
+    | Published (Result String FileSystem.CID)
+    | ClickUploadIcon
       -- Url
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url
@@ -199,8 +205,15 @@ update msg model =
         CreatedInitialState result ->
             case result of
                 Ok shoppingList ->
-                    ( { model | page = ShoppingList shoppingList }
-                    , Ports.log "Created initial state."
+                    ( { model
+                        | page = ShoppingList shoppingList
+                        , isPublishing = True
+                      }
+                    , Cmd.batch
+                        [ Ports.log "Created initial state."
+                        , FileSystem.publish
+                            |> Procedure.try ProcedureMsg Published
+                        ]
                     )
 
                 Err error ->
@@ -211,7 +224,9 @@ update msg model =
         SavedState result ->
             case result of
                 Ok _ ->
-                    ( model
+                    ( { model
+                        | isDirty = True
+                      }
                     , Ports.log "Saving current state in wnfs."
                     )
 
@@ -244,6 +259,27 @@ update msg model =
                     , Ports.log ("Error during ReloadedState: " ++ error)
                     )
 
+        Published result ->
+            case result of
+                Ok _ ->
+                    ( { model | isPublishing = False }
+                    , Cmd.none
+                    )
+
+                Err error ->
+                    ( model
+                    , Ports.log ("Error during publishing: " ++ error)
+                    )
+
+        ClickUploadIcon ->
+            ( { model
+                | isPublishing = True
+                , isDirty = False
+              }
+            , FileSystem.publish
+                |> Procedure.try ProcedureMsg Published
+            )
+
         UrlRequest _ ->
             ( model, Cmd.none )
 
@@ -274,7 +310,6 @@ createInitialState : ShoppingListModel -> Cmd Msg
 createInitialState shoppingList =
     FileSystem.writeUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
-        |> Procedure.andThen (\_ -> FileSystem.publish)
         |> Procedure.try ProcedureMsg (Result.map (\_ -> shoppingList) >> CreatedInitialState)
 
 
@@ -282,7 +317,6 @@ saveState : ShoppingListModel -> Cmd Msg
 saveState shoppingList =
     FileSystem.writeUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
-        |> Procedure.andThen (\_ -> FileSystem.publish)
         |> Procedure.try ProcedureMsg SavedState
 
 
@@ -411,14 +445,16 @@ view model =
                             { headerIcons =
                                 [ View.ShoppingList.headerIcon
                                     { icon = FeatherIcons.uploadCloud
-                                    , disabled = True
-                                    , styles = []
+                                    , onClick = ClickUploadIcon
+                                    , disabled = model.isPublishing || not model.isDirty
+                                    , styles = View.when model.isPublishing [ Tailwind.Utilities.animate_ping ]
                                     }
-                                , View.ShoppingList.headerIcon
-                                    { icon = FeatherIcons.refreshCw
-                                    , disabled = False
-                                    , styles = [ Tailwind.Utilities.animate_spin ]
-                                    }
+
+                                -- , View.ShoppingList.headerIcon
+                                --     { icon = FeatherIcons.refreshCw
+                                --     , disabled = False
+                                --     , styles = [ Tailwind.Utilities.animate_spin ]
+                                --     }
                                 ]
                             , main =
                                 [ if List.isEmpty renderedShoppingListItems then
@@ -473,7 +509,6 @@ subscriptions model =
     Sub.batch
         [ Ports.initializedWebnative
             (Json.decodeValue Webnative.Types.decoderState >> Initialized)
-        , Ports.heartbeat (\_ -> Heartbeat)
         , Procedure.Program.subscriptions model.procedureModel
         ]
 

@@ -1,7 +1,6 @@
 import "./main.css";
 import { Elm } from "./Main.elm";
 import * as webnative from "webnative";
-// import * as heartbeat from "./heartbeat.js";
 
 webnative.setup.debug({ enabled: true });
 window.webnative = webnative;
@@ -35,23 +34,6 @@ async function initializeWebnative() {
     if (state.authenticated) {
       window.wn = state;
       window.fs = fs;
-
-      const appPath = fs.appPath();
-      const appDirectoryExists = await fs.exists(appPath);
-
-      if (!appDirectoryExists) {
-        await fs.mkdir(appPath);
-        await fs.publish();
-      }
-
-      // heartbeat.start({
-      //   bpm: 30,
-      //   async onBeat() {
-      //     fs = await webnative.loadFileSystem(permissions, state.username)
-      //     window.fs = fs;
-      //     app.ports.heartbeat.send({})
-      //   }
-      // })
     }
 
     app.ports.fsRequest.subscribe(async request => {
