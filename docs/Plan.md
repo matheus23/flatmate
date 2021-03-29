@@ -6,7 +6,7 @@
 * [ ] Figure out a good way for publishing/syncing for now.
   - Maybe show the user that a sync is in progress (some kind of spinner somewhere, like the cloud icons in zenkit)
   - Incorporate publish into the sync flow somehow.
-  - Throttle .publish calls
+  - ~~Throttle .publish calls~~ webnative already does that.
 * [ ] Let's do conflict resolution
   - State is replicated in WNFS, event log of unpublished things is stored locally
     The events would look like "Add item *namehash*, *name*, *associated info* (index?)" and 
@@ -16,6 +16,8 @@
 * [ ] Progressive login.
 
 * [X] Identify elements by Hash
-* [ ] Publish only via button press
+* [X] Publish only via button press
+* [ ] Refresh via button press
+  - [ ] Decode `Data.FileSystem` on initialisation. Switch to a more general `invoke` FFI. Add special `en/decodeUtf8` ports.
 * [ ] Record an event log
 * [ ] Before publishing, test whether the head diverged
