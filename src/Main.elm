@@ -3,6 +3,7 @@ module Main exposing (..)
 import Browser
 import Browser.Navigation as Navigation
 import Codec exposing (Codec)
+import Data.FileSystem as FileSystem exposing (FileSystem)
 import FeatherIcons
 import FileSystem
 import Html.Styled exposing (text)
@@ -31,13 +32,15 @@ type alias Model =
     , procedureModel : Procedure.Program.Model Msg
     , isPublishing : Bool
     , isDirty : Bool
+    , isRefreshing : Bool
     }
 
 
 type Page
-    = Loading String
-    | SignIn
-    | ShoppingList ShoppingListModel
+    = SignIn
+    | LoadingLogIn
+    | LoadingShoppingList FileSystem String
+    | ShoppingList FileSystem ShoppingListModel
 
 
 type alias ShoppingListModel =
@@ -59,10 +62,11 @@ init { randomness } _ navKey =
             , seed4 = Random.initialSeed randomness.r4
             }
       , navKey = navKey
-      , page = Loading "Trying to log in..."
+      , page = LoadingLogIn
       , procedureModel = Procedure.Program.init
       , isPublishing = False
       , isDirty = False
+      , isRefreshing = False
       }
     , Cmd.none
     )
@@ -82,8 +86,7 @@ initShoppingList =
 type Msg
     = NoOp
     | RedirectToLobby
-    | Initialized (Result Json.Error Webnative.Types.State)
-    | Heartbeat
+    | Initialized Json.Value
     | ShoppingListMsg ShoppingListMsg
     | StateJsonExists (Result String Bool)
     | LoadedInitialState (Result String String)
@@ -91,7 +94,8 @@ type Msg
     | SavedState (Result String ())
     | ReloadedState (Result String String)
     | Published (Result String FileSystem.CID)
-    | ClickUploadIcon
+    | ClickedUploadIcon
+    | ClickedRefreshIcon
       -- Url
     | UrlRequest Browser.UrlRequest
     | UrlChanged Url
@@ -114,16 +118,6 @@ update msg model =
             , Cmd.none
             )
 
-        Heartbeat ->
-            ( model
-            , case model.page of
-                ShoppingList _ ->
-                    reloadState
-
-                _ ->
-                    Cmd.none
-            )
-
         ShoppingListMsg shoppingListMsg ->
             updateShoppingList shoppingListMsg model
 
@@ -132,8 +126,8 @@ update msg model =
             , Ports.redirectToLobby ()
             )
 
-        Initialized result ->
-            case result of
+        Initialized value ->
+            case Json.decodeValue Webnative.Types.decoderState value of
                 Err error ->
                     ( model
                     , Ports.log ("Error during webnative initialisation: " ++ Json.errorToString error)
@@ -148,78 +142,107 @@ update msg model =
                             notAuthenticated model
 
                         Webnative.Types.AuthSucceeded _ ->
-                            authenticated model
+                            case Json.decodeValue (Json.field "fs" FileSystem.decoder) value of
+                                Ok fs ->
+                                    authenticated model fs
+
+                                Err error ->
+                                    ( model
+                                    , Ports.log ("Couldn't get initialised filesystem: " ++ Json.errorToString error)
+                                    )
 
                         Webnative.Types.Continuation _ ->
-                            authenticated model
+                            case Json.decodeValue (Json.field "fs" FileSystem.decoder) value of
+                                Ok fs ->
+                                    authenticated model fs
+
+                                Err error ->
+                                    ( model
+                                    , Ports.log ("Couldn't get initialised filesystem: " ++ Json.errorToString error)
+                                    )
 
         StateJsonExists result ->
-            case result of
-                Ok exists ->
-                    if exists then
-                        ( { model | page = Loading "Loading saved shopping list" }
-                        , FileSystem.readUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
-                            |> Procedure.try ProcedureMsg LoadedInitialState
-                        )
+            case model.page of
+                LoadingShoppingList fs _ ->
+                    case result of
+                        Ok exists ->
+                            if exists then
+                                ( { model | page = LoadingShoppingList fs "Loading saved shopping list" }
+                                , FileSystem.readUtf8 fs "private/Apps/matheus23-test/Flatmate/state.json"
+                                    |> Procedure.try ProcedureMsg LoadedInitialState
+                                )
 
-                    else
-                        ( { model | page = Loading "Creating initial shopping list" }
-                        , createInitialState initShoppingList
-                        )
+                            else
+                                ( { model | page = LoadingShoppingList fs "Creating initial shopping list" }
+                                , createInitialState fs initShoppingList
+                                )
 
-                Err error ->
-                    ( model
-                    , Ports.log ("Error during StateJsonExists: " ++ error)
-                    )
+                        Err error ->
+                            ( model
+                            , Ports.log ("Error during StateJsonExists: " ++ error)
+                            )
+
+                _ ->
+                    ( model, Ports.log "Out of sync message StateJsonExists" )
 
         LoadedInitialState result ->
-            case result of
-                Ok stateJson ->
-                    case Codec.decodeString codecShoppingListModel stateJson of
-                        Ok initialState ->
+            case model.page of
+                LoadingShoppingList fs _ ->
+                    case result of
+                        Ok stateJson ->
+                            case Codec.decodeString codecShoppingListModel stateJson of
+                                Ok initialState ->
+                                    ( { model
+                                        | page = ShoppingList fs initialState
+                                      }
+                                    , Ports.log "Loaded from existing state."
+                                    )
+
+                                Err error ->
+                                    ( model
+                                    , Cmd.batch
+                                        [ Ports.log
+                                            (String.join "\n"
+                                                [ "Couldn't load state from wnfs:"
+                                                , Json.errorToString error
+                                                , "Overwriting with a clean state."
+                                                ]
+                                            )
+                                        , createInitialState fs initShoppingList
+                                        ]
+                                    )
+
+                        Err error ->
+                            ( model
+                            , Ports.log ("Error during LoadedInitialState: " ++ error)
+                            )
+
+                _ ->
+                    ( model, Ports.log "Out of sync message LoadedInitialState" )
+
+        CreatedInitialState result ->
+            case model.page of
+                LoadingShoppingList fs _ ->
+                    case result of
+                        Ok shoppingList ->
                             ( { model
-                                | page = ShoppingList initialState
+                                | page = ShoppingList fs shoppingList
+                                , isPublishing = True
                               }
-                            , Ports.log "Loaded from existing state."
+                            , Cmd.batch
+                                [ Ports.log "Created initial state."
+                                , FileSystem.publish fs
+                                    |> Procedure.try ProcedureMsg Published
+                                ]
                             )
 
                         Err error ->
                             ( model
-                            , Cmd.batch
-                                [ Ports.log
-                                    (String.join "\n"
-                                        [ "Couldn't load state from wnfs:"
-                                        , Json.errorToString error
-                                        , "Overwriting with a clean state."
-                                        ]
-                                    )
-                                , createInitialState initShoppingList
-                                ]
+                            , Ports.log ("Error during CreatedInitialState: " ++ error)
                             )
 
-                Err error ->
-                    ( model
-                    , Ports.log ("Error during LoadedInitialState: " ++ error)
-                    )
-
-        CreatedInitialState result ->
-            case result of
-                Ok shoppingList ->
-                    ( { model
-                        | page = ShoppingList shoppingList
-                        , isPublishing = True
-                      }
-                    , Cmd.batch
-                        [ Ports.log "Created initial state."
-                        , FileSystem.publish
-                            |> Procedure.try ProcedureMsg Published
-                        ]
-                    )
-
-                Err error ->
-                    ( model
-                    , Ports.log ("Error during CreatedInitialState: " ++ error)
-                    )
+                _ ->
+                    ( model, Ports.log "Out of sync message CreatedInitialState" )
 
         SavedState result ->
             case result of
@@ -236,28 +259,33 @@ update msg model =
                     )
 
         ReloadedState result ->
-            case result of
-                Ok stateJson ->
-                    case Codec.decodeString codecShoppingListModel stateJson of
-                        Ok state ->
-                            ( { model
-                                | page = ShoppingList state
-                              }
-                            , Ports.log "Reloaded state."
-                            )
+            case model.page of
+                ShoppingList fs _ ->
+                    case result of
+                        Ok stateJson ->
+                            case Codec.decodeString codecShoppingListModel stateJson of
+                                Ok state ->
+                                    ( { model
+                                        | page = ShoppingList fs state
+                                      }
+                                    , Ports.log "Reloaded state."
+                                    )
+
+                                Err error ->
+                                    ( model
+                                    , Ports.log
+                                        ("Couldn't reload state from wnfs:\n"
+                                            ++ Json.errorToString error
+                                        )
+                                    )
 
                         Err error ->
                             ( model
-                            , Ports.log
-                                ("Couldn't reload state from wnfs:\n"
-                                    ++ Json.errorToString error
-                                )
+                            , Ports.log ("Error during ReloadedState: " ++ error)
                             )
 
-                Err error ->
-                    ( model
-                    , Ports.log ("Error during ReloadedState: " ++ error)
-                    )
+                _ ->
+                    ( model, Ports.log "Out of sync message ReloadedState" )
 
         Published result ->
             case result of
@@ -271,13 +299,25 @@ update msg model =
                     , Ports.log ("Error during publishing: " ++ error)
                     )
 
-        ClickUploadIcon ->
-            ( { model
-                | isPublishing = True
-                , isDirty = False
-              }
-            , FileSystem.publish
-                |> Procedure.try ProcedureMsg Published
+        ClickedUploadIcon ->
+            case model.page of
+                ShoppingList fs _ ->
+                    ( { model
+                        | isPublishing = True
+                        , isDirty = False
+                      }
+                    , FileSystem.publish fs
+                        |> Procedure.try ProcedureMsg Published
+                    )
+
+                _ ->
+                    ( model
+                    , Ports.log "Out of sync message ClickedUploadIcon"
+                    )
+
+        ClickedRefreshIcon ->
+            ( model
+            , Cmd.none
             )
 
         UrlRequest _ ->
@@ -291,10 +331,10 @@ update msg model =
                 |> Tuple.mapFirst (\procedureModel -> { model | procedureModel = procedureModel })
 
 
-authenticated : Model -> ( Model, Cmd Msg )
-authenticated model =
-    ( { model | page = Loading "Looking for saved shopping list" }
-    , FileSystem.exists "private/Apps/matheus23-test/Flatmate/state.json"
+authenticated : Model -> FileSystem -> ( Model, Cmd Msg )
+authenticated model fs =
+    ( { model | page = LoadingShoppingList fs "Looking for saved shopping list" }
+    , FileSystem.exists fs "private/Apps/matheus23-test/Flatmate/state.json"
         |> Procedure.try ProcedureMsg StateJsonExists
     )
 
@@ -306,30 +346,32 @@ notAuthenticated model =
     )
 
 
-createInitialState : ShoppingListModel -> Cmd Msg
-createInitialState shoppingList =
-    FileSystem.writeUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
+createInitialState : FileSystem -> ShoppingListModel -> Cmd Msg
+createInitialState fs shoppingList =
+    FileSystem.writeUtf8 fs
+        "private/Apps/matheus23-test/Flatmate/state.json"
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
         |> Procedure.try ProcedureMsg (Result.map (\_ -> shoppingList) >> CreatedInitialState)
 
 
-saveState : ShoppingListModel -> Cmd Msg
-saveState shoppingList =
-    FileSystem.writeUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
+saveState : FileSystem -> ShoppingListModel -> Cmd Msg
+saveState fs shoppingList =
+    FileSystem.writeUtf8 fs
+        "private/Apps/matheus23-test/Flatmate/state.json"
         (Codec.encodeToString 4 codecShoppingListModel shoppingList)
         |> Procedure.try ProcedureMsg SavedState
 
 
-reloadState : Cmd Msg
-reloadState =
-    FileSystem.readUtf8 "private/Apps/matheus23-test/Flatmate/state.json"
+reloadState : FileSystem -> Cmd Msg
+reloadState fs =
+    FileSystem.readUtf8 fs "private/Apps/matheus23-test/Flatmate/state.json"
         |> Procedure.try ProcedureMsg ReloadedState
 
 
 updateShoppingList : ShoppingListMsg -> Model -> ( Model, Cmd Msg )
 updateShoppingList msg model =
     case model.page of
-        ShoppingList shoppingList ->
+        ShoppingList fs shoppingList ->
             case msg of
                 CheckItem itemHash ->
                     let
@@ -344,8 +386,8 @@ updateShoppingList msg model =
                                         shoppingList.list
                             }
                     in
-                    ( { model | page = ShoppingList newShoppingList }
-                    , saveState newShoppingList
+                    ( { model | page = ShoppingList fs newShoppingList }
+                    , saveState fs newShoppingList
                     )
 
                 ClearCheckedClicked ->
@@ -364,8 +406,8 @@ updateShoppingList msg model =
                                         shoppingList.list
                             }
                     in
-                    ( { model | page = ShoppingList newShoppingList }
-                    , saveState newShoppingList
+                    ( { model | page = ShoppingList fs newShoppingList }
+                    , saveState fs newShoppingList
                     )
 
                 ShoppingListInputSubmitted ->
@@ -389,12 +431,12 @@ updateShoppingList msg model =
                         ( model, Cmd.none )
 
                     else
-                        ( { model | page = ShoppingList newShoppingList }
-                        , saveState newShoppingList
+                        ( { model | page = ShoppingList fs newShoppingList }
+                        , saveState fs newShoppingList
                         )
 
                 ShoppingListInputChanged value ->
-                    ( { model | page = ShoppingList { shoppingList | inputValue = value } }
+                    ( { model | page = ShoppingList fs { shoppingList | inputValue = value } }
                     , Cmd.none
                     )
 
@@ -413,7 +455,12 @@ view model =
         [ Html.Styled.toUnstyled
             (View.desktopScaffolding
                 (case model.page of
-                    Loading message ->
+                    LoadingLogIn ->
+                        [ View.loadingScreen
+                            { message = "Logging in..." }
+                        ]
+
+                    LoadingShoppingList _ message ->
                         [ View.loadingScreen
                             { message = message }
                         ]
@@ -423,7 +470,7 @@ view model =
                             { onSignIn = RedirectToLobby }
                         ]
 
-                    ShoppingList shoppingList ->
+                    ShoppingList _ shoppingList ->
                         let
                             renderedShoppingListItems =
                                 shoppingList.list
@@ -445,16 +492,16 @@ view model =
                             { headerIcons =
                                 [ View.ShoppingList.headerIcon
                                     { icon = FeatherIcons.uploadCloud
-                                    , onClick = ClickUploadIcon
+                                    , onClick = ClickedUploadIcon
                                     , disabled = model.isPublishing || not model.isDirty
                                     , styles = View.when model.isPublishing [ Tailwind.Utilities.animate_ping ]
                                     }
-
-                                -- , View.ShoppingList.headerIcon
-                                --     { icon = FeatherIcons.refreshCw
-                                --     , disabled = False
-                                --     , styles = [ Tailwind.Utilities.animate_spin ]
-                                --     }
+                                , View.ShoppingList.headerIcon
+                                    { icon = FeatherIcons.refreshCw
+                                    , onClick = ClickedRefreshIcon
+                                    , disabled = model.isRefreshing
+                                    , styles = View.when model.isRefreshing [ Tailwind.Utilities.animate_spin ]
+                                    }
                                 ]
                             , main =
                                 [ if List.isEmpty renderedShoppingListItems then
@@ -507,8 +554,7 @@ main =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Ports.initializedWebnative
-            (Json.decodeValue Webnative.Types.decoderState >> Initialized)
+        [ Ports.initializedWebnative Initialized
         , Procedure.Program.subscriptions model.procedureModel
         ]
 

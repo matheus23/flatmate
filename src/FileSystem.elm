@@ -1,5 +1,13 @@
-port module FileSystem exposing (CID, exists, publish, readUtf8, writeUtf8)
+port module FileSystem exposing
+    ( CID
+    , exists
+    , publish
+    , readUtf8
+    , reloadFileSystem
+    , writeUtf8
+    )
 
+import Data.FileSystem as FileSystem exposing (FileSystem)
 import Json.Decode as D
 import Json.Encode as Json
 import Procedure exposing (Procedure)
@@ -14,11 +22,12 @@ type alias CID =
     String
 
 
-exists : String -> Procedure String Bool msg
-exists path =
+exists : FileSystem -> String -> Procedure String Bool msg
+exists fs path =
     Channel.open
         (call
-            { method = "exists"
+            { fs = fs
+            , method = "exists"
             , args = [ Json.string path ]
             , preprocess = []
             , postprocess = Nothing
@@ -31,11 +40,12 @@ exists path =
         |> Procedure.andThen (decodeResult D.bool)
 
 
-readUtf8 : String -> Procedure String String msg
-readUtf8 path =
+readUtf8 : FileSystem -> String -> Procedure String String msg
+readUtf8 fs path =
     Channel.open
         (call
-            { method = "read"
+            { fs = fs
+            , method = "read"
             , args = [ Json.string path ]
             , preprocess = []
             , postprocess = Just DecodeUtf8
@@ -48,11 +58,12 @@ readUtf8 path =
         |> Procedure.andThen (decodeResult D.string)
 
 
-writeUtf8 : String -> String -> Procedure String () msg
-writeUtf8 path content =
+writeUtf8 : FileSystem -> String -> String -> Procedure String () msg
+writeUtf8 fs path content =
     Channel.open
         (call
-            { method = "write"
+            { fs = fs
+            , method = "write"
             , args = [ Json.string path, Json.string content ]
             , preprocess = [ ( 1, EncodeUtf8 ) ]
             , postprocess = Nothing
@@ -65,11 +76,12 @@ writeUtf8 path content =
         |> Procedure.andThen (decodeResult (D.succeed ()))
 
 
-publish : Procedure String CID msg
-publish =
+publish : FileSystem -> Procedure String CID msg
+publish fs =
     Channel.open
         (call
-            { method = "publish"
+            { fs = fs
+            , method = "publish"
             , args = []
             , preprocess = []
             , postprocess = Nothing
@@ -80,6 +92,21 @@ publish =
         |> Channel.filter hasSameKey
         |> Channel.acceptOne
         |> Procedure.andThen (decodeResult D.string)
+
+
+reloadFileSystem : Procedure String FileSystem msg
+reloadFileSystem =
+    Channel.open
+        (\key ->
+            reloadFs
+                (Json.object
+                    [ ( "key", Json.string key ) ]
+                )
+        )
+        |> Channel.connect reloadedFs
+        |> Channel.filter hasSameKey
+        |> Channel.acceptOne
+        |> Procedure.andThen (decodeResult FileSystem.decoder)
 
 
 
@@ -95,16 +122,18 @@ type Postprocess
 
 
 call :
-    { method : String
+    { fs : FileSystem
+    , method : String
     , args : List Json.Value
     , preprocess : List ( Int, Preprocess )
     , postprocess : Maybe Postprocess
     }
     -> ChannelKey
     -> Json.Value
-call { method, args, postprocess, preprocess } key =
+call { fs, method, args, postprocess, preprocess } key =
     Json.object
         [ ( "key", Json.string key )
+        , ( "fs", FileSystem.encode fs )
         , ( "call"
           , Json.object
                 [ ( "method", Json.string method )
@@ -165,3 +194,9 @@ port fsRequest : Json.Value -> Cmd msg
 
 
 port fsResponse : (Json.Value -> msg) -> Sub msg
+
+
+port reloadFs : Json.Value -> Cmd msg
+
+
+port reloadedFs : (Json.Value -> msg) -> Sub msg

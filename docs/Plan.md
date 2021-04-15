@@ -21,3 +21,5 @@
   - [ ] Decode `Data.FileSystem` on initialisation. Switch to a more general `invoke` FFI. Add special `en/decodeUtf8` ports.
 * [ ] Record an event log
 * [ ] Before publishing, test whether the head diverged
+* [ ] Add a "log error" message to get rid of lots of "Result String a" types in Msg
+* [ ] Restructure the Model and what messages are ShoppingListMsg-es and what aren't

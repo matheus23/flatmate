@@ -41,6 +41,7 @@ async function initializeWebnative() {
       try {
         const preprocess = request.preprocess
         const postprocess = request.postprocess
+        const fs = request.fs
         const method = request.call.method
         let args = request.call.args
 
