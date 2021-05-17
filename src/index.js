@@ -11,7 +11,7 @@ window.crypto.getRandomValues(seed);
 const permissions = {
   app: {
     name: "Flatmate",
-    creator: "matheus23-test",
+    creator: "matheus23",
   },
 }
 
